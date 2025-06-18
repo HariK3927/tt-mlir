@@ -26,4 +26,3 @@ Contents
 .. toctree::
 
    api
-   ttir_builder
