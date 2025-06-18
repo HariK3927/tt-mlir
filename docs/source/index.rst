@@ -26,5 +26,4 @@ Contents
 .. toctree::
 
    api
-   usage
-   modules
+   ttir_builder

@@ -35,6 +35,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
+    # "../../build/python_packages/ttir_builder/builder.py"
 ]
 
 templates_path = ["_templates"]

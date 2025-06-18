@@ -14,6 +14,7 @@ import torch
 from enum import Enum, auto
 import re
 from .ccl_golden import *
+from sphinx.ext.autodoc import FunctionDocumenter
 
 # Alias for operands of ops which can be either BlockArguments, Values, or other
 # ops wrapped in OpView or Operation.
@@ -120,7 +121,7 @@ class TypeInfo:
 
 class GoldenCheckLevel(Enum):
     DISABLED = auto()  # Do not store golden.
-    OP_LEVEL = auto()  # Check every single op level goldens
+    OP_LEVEL = auto()  # Check every single op level goldensapis/
     GRAPH_LEVEL = auto()  # Check graph level goldens only
 
 
