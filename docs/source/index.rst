@@ -1,4 +1,4 @@
-.. ttir-builder documentation master file, created by
+.. ttir-builder documentation master file, created byMore actions
    sphinx-quickstart on Wed Jun 18 13:55:09 2025.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
