@@ -95,38 +95,36 @@ def build_mlir_module(
     module, and finally tie arguments of that FuncOp to test function inputs. It will
     also pass a `TTIRBuilder` object as the last argument of test function.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     test_fn : Callable
         Python function to be converted to MLIR
 
-    inputs_shapes: List[Shape]
+    inputs_shapes : List[Shape]
         Shapes of the respective ranked tensor inputs of the test function.
 
-    module_dump: bool
+    module_dump : bool
         Set to True to print out generated MLIR module.
 
-    golden_dump: bool
+    golden_dump : bool
         Set to True to dump golden info to flatbuffer file.
-
 
     Returns
     -------
-    MLIR module containing MLIR op graph defined by `test_fn`
+    Module
+        MLIR module containing MLIR op graph defined by `test_fn`
 
     Example
     -------
+    >>> def test_add(in0: Operand, in1: Operand, builder: TTIRBuilder):
+    ...     return builder.add(in0, in1)
+    ...
+    >>> build_mlir_module(test_add, ((32, 32), (32, 32)))
 
-    ```python
-        def test_add(in0: Operand, in1: Operand, builder: TTIRBuilder):
-            return builder.add(in0, in1)
+    This returns:
 
-        build_mlir_module(test_add, ((32, 32), (32, 32)))
-    ```
+    .. code-block:: mlir
 
-    which returns
-
-    ```
         #any = #ttcore.operand_constraint<...>
         module {
             func.func @test_add(
@@ -138,7 +136,6 @@ def build_mlir_module(
                 return %1 : tensor<32x32xf32>
             }
         }
-    ```
 
     Check out:
     https://github.com/llvm/llvm-project/blob/main/mlir/test/python/dialects/tensor.py
@@ -285,7 +282,7 @@ def compile_to_flatbuffer(
     print_ir: Union[bool, str] = False,
 ):
     """
-    Compiles a TTIRBuilder function `fn` to TTIR MLIR -> TT{Metal,NN} MLIR -> Flatbuffer
+    Compiles a TTIRBuilder function `fn` to TTIR MLIR -> TT{Metal,NN} MLIR -> Flatbuffer.
 
     This decorator is mainly a wrapper around the following functions, with
     each next function called on the output of the last:
@@ -294,50 +291,52 @@ def compile_to_flatbuffer(
     2. `run_pipeline`
     3. `to_flatbuffer`
 
-    The choice of TTNN vs. TTMetal is controlled by the `target` parameter
+    The choice of TTNN vs. TTMetal is controlled by the `target` parameter.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
+    fn : Callable
+        The TTIRBuilder function to compile. Must take `builder : TTIRBuilder` as a kwarg.
 
-    fn: Callable
-        The TTIRBuilder function to compile. Must take `builder : TTIRBuilder` as a kwarg
-
-    inputs_shapes: List[Shape]
+    inputs_shapes : List[Shape]
         Shapes of the respective ranked tensor inputs of the test function.
 
-    inputs_types: Optional[List[torch.dtype]]
+    inputs_types : Optional[List[torch.dtype]], optional
         The dtypes to use for the inputs to `fn`. Note that if supplied,
-        `len(inputs_shapes) == len(inputs_types)` must be true. Defaults to
-        `None`
+        `len(inputs_shapes) == len(inputs_types)` must be true.
+        Default is None.
 
-    test_base: str
+    test_base : str
         The string to be used as the base name for dumped files throughout the
         process. If `None` is provided, then the `__name__` of `fn` will be used.
 
-    output_root: str
+    output_root : str
         The path to dump all generated arguments under. If this path doesn't
-        exist, it will be created
+        exist, it will be created.
 
-    target: str
-        Either `"ttnn"` or `"ttmetal"`. This controls which backend to use
+    target : str
+        Either "ttnn" or "ttmetal". This controls which backend to use.
 
-    custom_pipeline: Union[Callable, str]
+    custom_pipeline : Union[Callable, str], optional
         Pipeline function to run.
-        Either a Callable:
-            custom_pipeline(module, options)
-        Or a str:
-            "ttir-lower-to-layout,ttir-bufferization-pipeline"
+        Can be either:
 
-    mesh_shape: Optional[Tuple[int, int]]
+        - A Callable: custom_pipeline(module, options)
+        - A str: "ttir-lower-to-layout,ttir-bufferization-pipeline"
+
+    mesh_shape : Optional[Tuple[int, int]], optional
         A list that contains shape of the mesh to be applied on ttir to ttnn
-        conversion path. Defaults to `None`
+        conversion path.
+        Default is None.
 
-    module_dump: bool
-        Set to `True` to print out generated TTIR MLIR module.
+    module_dump : bool, optional
+        Set to True to print out generated TTIR MLIR module.
+        Default is False.
 
-    print_ir: Union[bool, str]
-        Set to `True` to print IR to stdout.  Set to dir path to print IR after
-        each pass to its own file under _this_ directory.
+    print_ir : Union[bool, str], optional
+        Set to True to print IR to stdout. Set to dir path to print IR after
+        each pass to its own file under that directory.
+        Default is False.
     """
 
     if inputs_types is not None:
