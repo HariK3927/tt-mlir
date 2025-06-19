@@ -1,3 +1,5 @@
+include(${CMAKE_SOURCE_DIR}/cmake/modules/ConfigureSphinx.cmake)
+
 add_custom_target(copy-docs-dir
   COMMAND
     cp -r ${CMAKE_CURRENT_SOURCE_DIR}/* ${CMAKE_CURRENT_BINARY_DIR}
@@ -11,18 +13,42 @@ add_custom_target(autogen-summary
     mlir-doc copy-docs-dir
 )
 
+# Add Sphinx documentation target
+add_custom_target(sphinx-docs
+  COMMAND ${CMAKE_COMMAND} -E env LC_ALL=C ${SPHINX_APIDOC_COMMAND}
+  COMMAND ${CMAKE_COMMAND} -E env LC_ALL=C ${SPHINX_BUILD_COMMAND}
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  DEPENDS
+    TTIRBuilderModules
+    copy-docs-dir
+  COMMENT "Generating Sphinx documentation"
+)
+
+# Convert Sphinx HTML to Markdown
+add_custom_target(sphinx-to-md
+  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/docs/html_to_md.py
+    ${SPHINX_BUILD_DIR}
+    ${SPHINX_MD_DIR}
+  DEPENDS
+    sphinx-docs
+  COMMENT "Converting Sphinx HTML to Markdown"
+)
+
 add_custom_target(docs
   COMMAND
     mdbook build
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
   DEPENDS
-    autogen-summary mlir-doc copy-docs-dir
+    autogen-summary
+    mlir-doc
+    copy-docs-dir
+    sphinx-docs
+    sphinx-to-md
 )
 
 find_package(Doxygen)
 
 if (DOXYGEN_FOUND)
-
   if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/book/doxygen)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/book/doxygen)
   endif()
