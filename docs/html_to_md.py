@@ -13,6 +13,7 @@ def convert_html_to_md(html_dir, md_dir):
     md_dir = Path(md_dir)
     md_dir.mkdir(parents=True, exist_ok=True)
 
+    # Process HTML files
     for html_file in html_dir.rglob("*.html"):
         rel_path = html_file.relative_to(html_dir)
         md_file = md_dir / rel_path.with_suffix(".md")

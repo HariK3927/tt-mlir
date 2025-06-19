@@ -15,6 +15,8 @@ add_custom_target(autogen-summary
 
 # Add Sphinx documentation target
 add_custom_target(sphinx-docs
+  COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_BUILD_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_BUILD_DIR}
   COMMAND ${CMAKE_COMMAND} -E env LC_ALL=C ${SPHINX_APIDOC_COMMAND}
   COMMAND ${CMAKE_COMMAND} -E env LC_ALL=C ${SPHINX_BUILD_COMMAND}
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -26,7 +28,10 @@ add_custom_target(sphinx-docs
 
 # Convert Sphinx HTML to Markdown
 add_custom_target(sphinx-to-md
-  COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/docs/html_to_md.py
+  COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_MD_DIR}
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_MD_DIR}
+  COMMAND ${Python3_EXECUTABLE}
+    ${CMAKE_SOURCE_DIR}/docs/html_to_md.py
     ${SPHINX_BUILD_DIR}
     ${SPHINX_MD_DIR}
   DEPENDS
