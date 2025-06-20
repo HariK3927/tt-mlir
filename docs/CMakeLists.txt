@@ -26,18 +26,6 @@ add_custom_target(sphinx-docs
   COMMENT "Generating Sphinx documentation"
 )
 
-# Convert Sphinx HTML to Markdown
-add_custom_target(sphinx-to-md
-  COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_MD_DIR}
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${SPHINX_MD_DIR}
-  COMMAND ${Python3_EXECUTABLE}
-    ${CMAKE_SOURCE_DIR}/docs/html_to_md.py
-    ${SPHINX_BUILD_DIR}
-    ${SPHINX_MD_DIR}
-  DEPENDS
-    sphinx-docs
-  COMMENT "Converting Sphinx HTML to Markdown"
-)
 
 add_custom_target(docs
   COMMAND
@@ -48,7 +36,6 @@ add_custom_target(docs
     mlir-doc
     copy-docs-dir
     sphinx-docs
-    sphinx-to-md
 )
 
 find_package(Doxygen)
