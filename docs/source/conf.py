@@ -49,8 +49,13 @@ autodoc_default_options = {
     "members": True,
     "undoc-members": True,
     "show-inheritance": True,
+    "inherited-members": True,
+    "private-members": True,
     "special-members": "__init__",
+    "member-order": "bysource",
 }
+autodoc_docstring_signature = True
+autodoc_typehints = "description"
 
 # Napoleon settings
 napoleon_google_docstring = False
@@ -70,7 +75,7 @@ autodoc_docstring_signature = True
 autodoc_preserve_defaults = True
 
 # Autosummary settings
-# autosummary_generate = ['generated/ttir_builder.TTIRBuilder']
+autosummary_generate = True  # ['generated/ttir_builder.TTIRBuilder']
 # html_split_index = False
 
 templates_path = ["_templates"]
@@ -81,7 +86,6 @@ exclude_patterns = ["test_optimizer_overrides.py"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
-html_logo = "images/tt-mlir-logo.png"
 html_static_path = ["_static"]
 
 
