@@ -24,3 +24,17 @@ Contents
 --------
 
 .. toctree::
+   :maxdepth: 2
+
+API Reference
+=============
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   ttir_builder.ops
+   ttir_builder.apis
+   ttir_builder.builder
+   ttir_builder.ccl_golden
+   ttir_builder.utils
