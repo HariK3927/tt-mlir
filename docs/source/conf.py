@@ -15,11 +15,11 @@ from pathlib import Path
 
 # Add the Python packages directory to the path
 build_dir = Path(__file__).resolve().parents[3] / "build"
-sys.path.insert(0, str(build_dir / "python_packages"))
+sys.path.insert(0, str(build_dir / "python_packages/ttir_builder"))
 
 # Output paths
-html_dir = build_dir / "docs/book/autogen/html/ttir-builder"
-md_dir = build_dir / "docs/src/autogen/md/ttir-builder"
+html_dir = build_dir / "docs/book/autogen/html/Module"
+md_dir = build_dir / "docs/src/autogen/md/Module"
 
 # Create output directories
 html_dir.mkdir(parents=True, exist_ok=True)
@@ -42,7 +42,6 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    # "../../build/python_packages/ttir_builder/builder.py"
 ]
 
 autodoc_default_options = {
@@ -75,8 +74,7 @@ autodoc_docstring_signature = True
 autodoc_preserve_defaults = True
 
 # Autosummary settings
-autosummary_generate = True  # ['generated/ttir_builder.TTIRBuilder']
-# html_split_index = False
+autosummary_generate = True
 
 templates_path = ["_templates"]
 exclude_patterns = ["test_optimizer_overrides.py"]
