@@ -4154,6 +4154,39 @@ class TTIRBuilderOps:
     def div(
         self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
     ) -> OpView:
+        """Elementwise division operation.
+
+        The `div` operation performs an elementwise division between
+        two tensors. For each pair of corresponding elements, it divides
+        the elements and places the result in the output tensor.
+
+        Args:
+            in0: The first input tensor
+            in1: The second input tensor
+            unit_attrs: Optional list of unit attributes
+
+        Returns:
+            OpView: The output tensor with element-wise quotients
+
+        Example:
+            # Integer tensors
+            # in0: [10, 20, 30]
+            # in1: [1, 2, 3]
+            result = div(in0, in1)
+            # Output: [10, 10, 10]
+
+            # Float tensors
+            # in0: [3.5, 0.0, -1.2]
+            # in1: [1.5, 2.0, -3.2]
+            result = div(in0, in1)
+            # Output: [2.33..., 0.0, 0.374999...]
+
+        Note:
+            The data type of the output tensor matches the data type of
+            the input tensors.
+
+        Mathematical definition: div(x, y) = x / y
+        """
         return self.eltwise_proxy(
             torch.div, ttir.DivOp, [in0, in1], unit_attrs=unit_attrs
         )
