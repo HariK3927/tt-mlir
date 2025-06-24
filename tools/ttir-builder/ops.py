@@ -4194,6 +4194,39 @@ class TTIRBuilderOps:
     def maximum(
         self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
     ) -> OpView:
+        """Elementwise maximum operation.
+
+        The `maximum` operation computes the elementwise maximum between two tensors.
+        For each pair of corresponding elements, it selects the larger value and places
+        it in the output tensor. This operation has the idempotence property, meaning
+        that applying it twice with the same second operand returns the original result:
+        maximum(maximum(x, y), y) = maximum(x, y).
+
+        Note: When comparing with NaN values, NaN is typically not selected as the maximum value.
+
+        Args:
+            in0: First input tensor
+            in1: Second input tensor
+            unit_attrs: Optional list of unit attributes
+
+        Returns:
+            OpView: A tensor containing the elementwise maximum of the inputs
+
+        Example:
+            # Minimum operation
+            # Input tensors:
+            # lhs: [[3, 2, 7], [1, 4, 4]]
+            # rhs: [[1, 4, 2], [1, 2, 3]]
+            # Output tensor: [[3, 4, 7], [1, 4, 4]]
+            result = maximum(lhs, rhs)
+
+            # Example with floating point values
+            # Input tensors:
+            # float_lhs: [3.5, -2.1, 0.0]
+            # float_rhs: [1.2, -5.0, 0.0]
+            # Output tensor: [3.5, -2.1, 0.0]
+            result = maximum(float_lhs, float_rhs)
+        """
         return self.eltwise_proxy(
             torch.maximum, ttir.MaximumOp, [in0, in1], unit_attrs=unit_attrs
         )
