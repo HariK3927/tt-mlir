@@ -251,7 +251,7 @@ class TTIRBuilderOps:
     def cbrt(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise cubic root operation.
 
-        The cbrt operation computes the cubic root (∛) of each element in the input tensor.
+        The `cbrt` operation computes the cubic root (∛) of each element in the input tensor.
         For each element, it returns the real-valued number that, when cubed, equals the input value.
         Unlike square root, cubic root is defined for negative numbers as well as positive numbers.
 
@@ -283,7 +283,7 @@ class TTIRBuilderOps:
     def ceil(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise ceiling operation.
 
-        The ceil operation computes the ceiling (smallest integer greater than or equal to x)
+        The `ceil` operation computes the ceiling (smallest integer greater than or equal to x)
         of each element in the input tensor. For each element, it rounds the value up to the
         nearest integer. The operation preserves the data type of the input.
 
@@ -329,7 +329,7 @@ class TTIRBuilderOps:
     def floor(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise floor operation.
 
-        The floor operation computes the floor (greatest integer less than or equal to x)
+        The `floor` operation computes the floor (greatest integer less than or equal to x)
         of each element in the input tensor. For each element, it rounds the value down to
         the nearest integer. The operation preserves the data type of the input.
 
@@ -356,7 +356,7 @@ class TTIRBuilderOps:
     def gelu(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise GELU operation.
 
-        The gelu operation computes the GELU (Gaussian Error Linear Unit) of each element
+        The `gelu` operation computes the GELU (Gaussian Error Linear Unit) of each element
         in the input tensor. For each element, it returns the GELU value, which is a smooth,
         non-monotonic function that approximates the cumulative distribution function of a
         standard normal distribution.
@@ -409,7 +409,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise logical not operation.
 
-        The logical_not operation computes the logical negation of each element in the
+        The `logical_not` operation computes the logical negation of each element in the
         input tensor. For each element, it returns a boolean value indicating whether
         the element is false (zero) or true (non-zero).
 
@@ -476,7 +476,7 @@ class TTIRBuilderOps:
     def neg(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise negate operation.
 
-        The neg operation negates each element in the input tensor. For each element,
+        The `neg` operation negates each element in the input tensor. For each element,
         it returns the negation of the value. The operation preserves the data type
         of the input.
 
@@ -501,7 +501,7 @@ class TTIRBuilderOps:
     def tan(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise tan operation.
 
-        The tan operation computes the tangent of each element in the input tensor.
+        The `tan` operation computes the tangent of each element in the input tensor.
         For each element, it returns the tangent of the angle in radians.
 
         Args:
@@ -524,7 +524,7 @@ class TTIRBuilderOps:
     def atan(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise arctangent operation.
 
-        The atan operation computes the arctangent (inverse tangent) of each element in
+        The `atan` operation computes the arctangent (inverse tangent) of each element in
         the input tensor. For each element, it returns the angle in radians whose tangent
         is the input value. The operation returns values in the range [-π/2, π/2].
 
@@ -552,7 +552,7 @@ class TTIRBuilderOps:
     def tanh(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise hyperbolic tangent operation.
 
-        The tanh operation computes the hyperbolic tangent of each element in the input
+        The `tanh` operation computes the hyperbolic tangent of each element in the input
         tensor. For each element, it returns the hyperbolic tangent of the value.
 
         Mathematical definition: tanh(x) = (e^x - e^-x) / (e^x + e^-x)
@@ -577,7 +577,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise reciprocal operation.
 
-        The reciprocal operation computes the reciprocal (1/x) of each element in the
+        The `reciprocal` operation computes the reciprocal (1/x) of each element in the
         input tensor. For each element, it returns the reciprocal of the value.
 
         Mathematical definition: reciprocal(x) = 1 / x
@@ -602,7 +602,7 @@ class TTIRBuilderOps:
     def relu(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise ReLU operation.
 
-        The relu operation computes the rectified linear unit (ReLU) of each element in
+        The `relu` operation computes the rectified linear unit (ReLU) of each element in
         the input tensor. For each element, it returns the maximum of 0 and the value.
         The operation preserves the data type of the input.
 
@@ -802,7 +802,7 @@ class TTIRBuilderOps:
     def log(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise natural logarithm operation.
 
-        The log operation computes the natural logarithm of each element in the input tensor.
+        The `log` operation computes the natural logarithm of each element in the input tensor.
         For each element, it returns the natural logarithm (base e) of the value.
 
         This operation is defined only for positive values; the behavior for zero or negative
@@ -832,7 +832,7 @@ class TTIRBuilderOps:
     def log1p(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise natural logarithm of one plus input operation.
 
-        The log1p operation computes the natural logarithm of one plus each element in the
+        The `log1p` operation computes the natural logarithm of one plus each element in the
         input tensor. For each element x, it returns ln(1 + x). This operation is more
         accurate than computing log(1 + x) directly for x values close to zero, and it is
         defined for x > -1. For values less than or equal to -1, the behavior depends on
@@ -860,7 +860,7 @@ class TTIRBuilderOps:
     def expm1(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise exponential minus one operation.
 
-        The expm1 operation computes the exponential of each element in the input tensor
+        The `expm1` operation computes the exponential of each element in the input tensor
         and subtracts one. For each element x, it returns e^x - 1. This operation is more
         accurate than computing exp(x) - 1 directly for x values close to zero, where
         catastrophic cancellation can occur in the subtraction.
@@ -898,7 +898,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise leaky ReLU operation.
 
-        The Leaky ReLU (Rectified Linear Unit) operation computes an element-wise
+        The `leaky_relu` operation computes an element-wise
         activation function over its input tensor. It is defined as:
 
         y = x if x > 0
@@ -945,7 +945,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise equality comparison operation.
 
-        The eq operation performs an elementwise equality comparison between two tensors.
+        The `eq` operation performs an elementwise equality comparison between two tensors.
         For each pair of corresponding elements, it returns:
         - 1 (true) if the elements are equal
         - 0 (false) if the elements are not equal
@@ -993,7 +993,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise inequality comparison operation.
 
-        The ne operation performs an elementwise inequality comparison between two tensors.
+        The `ne` operation performs an elementwise inequality comparison between two tensors.
         For each pair of corresponding elements, it returns:
         - 1 (true) if the elements are not equal
         - 0 (false) if the elements are equal
@@ -1038,7 +1038,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise greater than or equal to comparison operation.
 
-        The ge operation performs an elementwise greater than or equal to comparison between
+        The `ge` operation performs an elementwise greater than or equal to comparison between
         two tensors. For each pair of corresponding elements, it returns:
         - 1 (true) if the left element is greater than or equal to the right element
         - 0 (false) if the left element is less than the right element
@@ -1083,7 +1083,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise greater than comparison operation.
 
-        The gt operation performs an elementwise greater than comparison between two tensors.
+        The `gt` operation performs an elementwise greater than comparison between two tensors.
         For each pair of corresponding elements, it returns:
         - 1 (true) if the left element is greater than the right element
         - 0 (false) if the left element is less than or equal to the right element
@@ -1128,7 +1128,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise less than or equal to comparison operation.
 
-        The le operation performs an elementwise less than or equal to comparison between
+        The `le` operation performs an elementwise less than or equal to comparison between
         two tensors. For each pair of corresponding elements, it returns:
         - 1 (true) if the left element is less than or equal to the right element
         - 0 (false) if the left element is greater than the right element
@@ -1173,7 +1173,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise less than comparison operation.
 
-        The lt operation performs an elementwise less than comparison between two tensors.
+        The `lt` operation performs an elementwise less than comparison between two tensors.
         For each pair of corresponding elements, it returns:
         - 1 (true) if the left element is less than the right element
         - 0 (false) if the left element is greater than or equal to the right element
@@ -1218,7 +1218,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise logical AND operation.
 
-        The logical_and operation performs an elementwise logical AND operation between
+        The `logical_and` operation performs an elementwise logical AND operation between
         two tensors. For each pair of corresponding elements, it returns:
         - 1 (true) if both elements are 1 (true)
         - 0 (false) if at least one element is 0 (false)
@@ -1263,7 +1263,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise logical OR operation.
 
-        The logical_or operation performs an elementwise logical OR operation between
+        The `logical_or` operation performs an elementwise logical OR operation between
         two tensors. For each pair of corresponding elements, it returns:
         - 1 (true) if at least one element is 1 (true)
         - 0 (false) if both elements are 0 (false)
@@ -1376,7 +1376,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise minimum operation.
 
-        The minimum operation computes the elementwise minimum between two tensors.
+        The `minimum` operation computes the elementwise minimum between two tensors.
         For each pair of corresponding elements, it selects the smaller value and places
         it in the output tensor. This operation has the idempotence property, meaning
         that applying it twice with the same second operand returns the original result:
@@ -1457,7 +1457,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise remainder operation.
 
-        The remainder operation performs an elementwise remainder (modulo) operation
+        The `remainder` operation performs an elementwise remainder (modulo) operation
         between two tensors. For each pair of corresponding elements, it computes the
         remainder when dividing the element in the first tensor (dividend) by the
         element in the second tensor (divisor) and places the result in the output tensor.
@@ -1494,7 +1494,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise power operation.
 
-        The pow operation performs an elementwise exponentiation between two tensors.
+        The `pow` operation performs an elementwise exponentiation between two tensors.
         For each pair of corresponding elements, it raises the element in the first
         tensor (base) to the power of the element in the second tensor (exponent) and
         places the result in the output tensor.
@@ -1649,7 +1649,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Mean reduction operation.
 
-        The mean operation computes the arithmetic mean of elements along specified
+        The `mean` operation computes the arithmetic mean of elements along specified
         dimensions of the input tensor. This operation reduces the input tensor by
         computing the average of all elements along the dimensions specified in
         dim_arg. If dim_arg is not provided, the mean is computed over all dimensions,
@@ -1714,7 +1714,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Maximum reduction operation.
 
-        The max operation computes the maximum value of elements along specified
+        The `max` operation computes the maximum value of elements along specified
         dimensions of the input tensor. This operation reduces the input tensor by
         finding the maximum value of all elements along the dimensions specified in
         dim_arg. If dim_arg is not provided, the maximum is computed over all dimensions,
@@ -1788,7 +1788,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Minimum reduction operation.
 
-        The min operation computes the minimum value of elements along specified
+        The `min` operation computes the minimum value of elements along specified
         dimensions of the input tensor. This operation reduces the input tensor by
         finding the minimum value of all elements along the dimensions specified in
         dim_arg. If dim_arg is not provided, the minimum is computed over all dimensions,
@@ -1863,7 +1863,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Logical AND reduction operation.
 
-        The reduce_and operation performs a logical AND reduction along specified
+        The `reduce_and` operation performs a logical AND reduction along specified
         dimensions of the input tensor. This operation reduces the input tensor by
         applying a logical AND operation to all elements along the dimensions
         specified in dim_args. If dim_args is not provided, the reduction is computed
@@ -1924,7 +1924,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Logical OR reduction operation.
 
-        The reduce_or operation performs a logical OR reduction along specified
+        The `reduce_or` operation performs a logical OR reduction along specified
         dimensions of the input tensor. This operation reduces the input tensor by
         applying a logical OR operation to all elements along the dimensions
         specified in dim_args. If dim_args is not provided, the reduction is computed
@@ -1986,7 +1986,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Product reduction operation.
 
-        The prod operation computes the product of elements along specified dimensions
+        The `prod` operation computes the product of elements along specified dimensions
         of the input tensor. This operation reduces the input tensor by multiplying
         all elements along the dimensions specified in dim_arg. If dim_arg is not
         provided, the product is computed over all dimensions, resulting in a scalar
@@ -2045,7 +2045,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Embedding lookup operation.
 
-        The embedding operation performs a lookup in an embedding table (weight matrix)
+        The `embedding` operation performs a lookup in an embedding table (weight matrix)
         using integer indices. This operation takes an input tensor of indices and a
         weight tensor representing the embedding table. For each index in the input
         tensor, it retrieves the corresponding row from the weight tensor. The result
@@ -2262,7 +2262,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Tensor concatenation operation.
 
-        The concat operation joins multiple tensors along a specified dimension. This
+        The `concat` operation joins multiple tensors along a specified dimension. This
         operation concatenates a list of tensors along the dimension specified by dim.
         All input tensors must have the same shape except for the dimension being
         concatenated, and the output tensor's shape will match the input tensors
@@ -2310,7 +2310,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Repeat operation.
 
-        The repeat operation creates a new tensor by replicating the input tensor's
+        The `repeat` operation creates a new tensor by replicating the input tensor's
         elements along specified dimensions. This operation repeats the entire input
         tensor along each dimension according to the values specified in dims. The
         resulting tensor's shape is the product of the input tensor's shape and the
@@ -2358,7 +2358,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Tensor repeat interleave operation.
 
-        The repeat_interleave operation repeats elements of a tensor along a specified
+        The `repeat_interleave` operation repeats elements of a tensor along a specified
         dimension. Unlike the repeat operation which repeats the entire tensor, this
         operation repeats each individual element of the input tensor the specified
         number of times along the given dimension. This creates an interleaved
@@ -2418,7 +2418,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Cache filling operation.
 
-        The fill_cache operation fills a cache tensor with values from an input tensor.
+        The `fill_cache` operation fills a cache tensor with values from an input tensor.
         Unlike update_cache which updates specific positions, this operation fills the
         entire cache or a contiguous section of it with values from the input tensor.
         This is commonly used to initialize a cache in sequence models.
@@ -2469,7 +2469,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Cache update operation.
 
-        The update_cache operation updates a cache tensor with values from an input
+        The `update_cache` operation updates a cache tensor with values from an input
         tensor at specific indices. This operation is commonly used in sequence models
         like transformers to update a key-value cache with new token information. It
         takes a cache tensor, an input tensor, and update indices, and updates the
@@ -2876,7 +2876,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """2D maximum pooling operation.
 
-        The max_pool2d operation applies a 2D maximum pooling over an input tensor
+        The `max_pool2d` operation applies a 2D maximum pooling over an input tensor
         composed of several input planes. This operation performs downsampling by
         dividing the input into local regions and computing the maximum value of each
         region. It reduces the spatial dimensions (height and width) of an input
@@ -3113,7 +3113,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Tensor padding operation.
 
-        The pad operation adds padding to the edges of an input tensor with a
+        The `pad` operation adds padding to the edges of an input tensor with a
         specified constant value. This operation extends the dimensions of the
         input tensor by adding padding elements with a constant value. The padding
         is specified for each dimension as the number of elements to add at the
@@ -3241,7 +3241,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Tensor indexing operation.
 
-        The index operation extracts a sub-tensor (slice) from the input tensor
+        The `index` operation extracts a sub-tensor (slice) from the input tensor
         along a specified dimension. This operation selects elements from the input
         tensor along a single dimension based on the specified begin, end, and step
         indices. It's similar to Python's slicing notation tensor[:, begin:end:step, :]
@@ -3644,7 +3644,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Linear transformation operation.
 
-        The linear operation performs a linear transformation by computing the
+        The `linear` operation performs a linear transformation by computing the
         matrix multiplication of tensors a and b with an optional addition of a
         bias tensor. This operation is commonly used in neural networks to
         implement fully connected layers. It computes the matrix multiplication
@@ -3726,7 +3726,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Matrix multiplication operation.
 
-        The matmul operation computes the matrix multiplication of two tensors.
+        The `matmul` operation computes the matrix multiplication of two tensors.
         This operation performs matrix multiplication between tensors a and b.
         For 2D tensors, this computes the standard matrix product. For tensors
         with more dimensions, it applies batched matrix multiplication.
@@ -3777,7 +3777,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Tensor dimension permutation operation.
 
-        The permute operation reorders the dimensions of the input tensor
+        The `permute` operation reorders the dimensions of the input tensor
         according to the specified permutation. This operation is similar to
         transpose but generalizes to tensors of any rank. It rearranges the
         dimensions of the input tensor based on the permutation attribute,
@@ -3918,7 +3918,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Tensor range generation operation.
 
-        The arange operation generates a tensor with evenly spaced values
+        The `arange` operation generates a tensor with evenly spaced values
         within a given interval. This operation creates a tensor with values
         from start to end (exclusive) with a step size of step, along the
         dimension specified by arange_dimension. It's similar to NumPy's
@@ -3999,7 +3999,7 @@ class TTIRBuilderOps:
     def exp(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """Elementwise exponential operation.
 
-        The exp operation computes the exponential of each element in the
+        The `exp` operation computes the exponential of each element in the
         input tensor. For each element, it returns e^x, where e is the base
         of natural logarithms (approximately 2.71828).
 
@@ -4026,7 +4026,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise addition operation.
 
-        The add operation performs an elementwise addition between two
+        The `add` operation performs an elementwise addition between two
         tensors. For each pair of corresponding elements, it adds the
         elements and places the result in the output tensor.
 
@@ -4069,7 +4069,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Elementwise multiplication operation.
 
-        The multiply operation performs an elementwise multiplication between
+        The `multiply` operation performs an elementwise multiplication between
         two tensors. For each pair of corresponding elements, it multiplies
         the elements and places the result in the output tensor.
 
@@ -4175,7 +4175,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Quantize operation.
 
-        The Quantize operation converts a tensor into a quantized tensor using the specified
+        The `quantize` operation converts a tensor into a quantized tensor using the specified
         scale and zero_point parameters. For each element in the input tensor, the quantization
         is computed as:
             output[i] = (input[i] / scale) + zero_point
@@ -4221,7 +4221,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Dequantize operation.
 
-        The Dequantize operation converts a quantized tensor back into a floating-point tensor
+        The `dequantize` operation converts a quantized tensor back into a floating-point tensor
         using the specified scale and zero_point parameters. For each element in the input
         tensor, the dequantization is computed as:
             output[i] = (input[i] - zero_point) * scale
@@ -4261,7 +4261,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Requantize operation.
 
-        The Requantize operation converts a quantized tensor from one scale and zero-point
+        The `requantize` operation converts a quantized tensor from one scale and zero-point
         to another. For each element in the input tensor, the requantization is computed as:
             output[i] = round((input[i] - input_zero_point) * (input_scale / output_scale)) + output_zero_point
 
@@ -4304,7 +4304,7 @@ class TTIRBuilderOps:
     ) -> OpView:
         """Layout transition operation.
 
-        The ToLayout operation transitions tensors from one layout to another. This can include:
+        The `to_layout` operation transitions tensors from one layout to another. This can include:
         - Transitioning between different memory spaces (e.g., DRAM to L1)
         - Transitioning between different data types (e.g., f32 to f16)
         - Transitioning between different tile sizes (e.g., 1x16 to 32x32)
