@@ -35,6 +35,4 @@ API Reference
 
    ttir_builder.ops
    ttir_builder.apis
-   ttir_builder.builder
-   ttir_builder.ccl_golden
    ttir_builder.utils

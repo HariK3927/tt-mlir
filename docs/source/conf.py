@@ -77,7 +77,7 @@ autodoc_preserve_defaults = True
 autosummary_generate = True
 
 templates_path = ["_templates"]
-exclude_patterns = ["test_optimizer_overrides.py"]
+exclude_patterns = ["modules.rst", "ttir_builder.rst"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -87,5 +87,12 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
 
+def autodoc_skip_member(app, what, name, obj, skip, options):
+    if hasattr(obj, "__autodoc_skip__") and obj.__autodoc_skip__:
+        return True  # Skip this member
+    return skip
+
+
 def setup(app):
     app.add_css_file("tt_theme.css")
+    app.connect("autodoc-skip-member", autodoc_skip_member)

@@ -5,14 +5,6 @@ add_custom_target(copy-docs-dir
     cp -r ${CMAKE_CURRENT_SOURCE_DIR}/* ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_custom_target(autogen-summary
-  COMMAND
-    python ${CMAKE_CURRENT_SOURCE_DIR}/autogen-summary.py
-  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-  DEPENDS
-    mlir-doc copy-docs-dir
-)
-
 # Add Sphinx documentation target
 add_custom_target(sphinx-docs
   COMMAND ${CMAKE_COMMAND} -E remove_directory ${SPHINX_BUILD_DIR}
@@ -26,16 +18,29 @@ add_custom_target(sphinx-docs
   COMMENT "Generating Sphinx documentation"
 )
 
+add_custom_target(autogen-summary
+  COMMAND
+    python ${CMAKE_CURRENT_SOURCE_DIR}/autogen-summary.py
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  DEPENDS
+    mlir-doc copy-docs-dir sphinx-docs
+)
+
+add_custom_target(remove-index
+    COMMAND ${CMAKE_COMMAND} -E remove ${SPHINX_MD_DIR}/index.md
+    DEPENDS sphinx-docs
+)
 
 add_custom_target(docs
   COMMAND
     mdbook build
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
   DEPENDS
-    autogen-summary
     mlir-doc
     copy-docs-dir
     sphinx-docs
+    autogen-summary
+    remove-index
 )
 
 find_package(Doxygen)

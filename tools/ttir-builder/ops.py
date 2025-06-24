@@ -14,7 +14,6 @@ import torch
 from enum import Enum, auto
 import re
 from .ccl_golden import *
-from .builder import *
 from sphinx.ext.autodoc import FunctionDocumenter
 
 # Alias for operands of ops which can be either BlockArguments, Values, or other
@@ -113,6 +112,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def dot_general_golden_function(
         self,
         lhs,
@@ -123,24 +123,6 @@ class TTIRBuilderOps:
         batch_dims_rhs,
         contract_dims_rhs,
     ):
-        """Helper function to compute the golden tensor for dot_general operation.
-
-        Implements the dot general computation using PyTorch operations for generating
-        reference outputs. The function handles tensor permutation and batched matrix
-        multiplication according to the specified batch and contraction dimensions.
-
-        Args:
-            lhs: Left-hand side tensor
-            rhs: Right-hand side tensor
-            out: Output tensor shape reference
-            batch_dims_lhs: Batch dimensions for left-hand side tensor
-            contract_dims_lhs: Contraction dimensions for left-hand side tensor
-            batch_dims_rhs: Batch dimensions for right-hand side tensor
-            contract_dims_rhs: Contraction dimensions for right-hand side tensor
-
-        Returns:
-            torch.Tensor: The computed result of the generalized dot operation
-        """
         non_batch_dims_lhs = [d for d in range(lhs.dim()) if d not in batch_dims_lhs]
         non_batch_dims_rhs = [d for d in range(rhs.dim()) if d not in batch_dims_rhs]
         transposed_lhs = torch.permute(lhs, (batch_dims_lhs + non_batch_dims_lhs))
@@ -438,6 +420,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def bitwise_not(
         self, in0: Operand, unit_attrs: Optional[List[str]] = None
     ) -> OpView:
@@ -516,8 +499,6 @@ class TTIRBuilderOps:
             # Input tensor: [[1.7, 2.0, -0.3, 4.5], ...]
             # Output tensor: [[0.9601, 0.5403, -0.3, 4.5], ...]
             result = tan(input)
-
-        Note: See issue #1719 for information on golden PCC fail
         """
         return self.eltwise_proxy(torch.tan, ttir.TanOp, [in0], unit_attrs)
 
@@ -1318,6 +1299,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def bitwise_and(
         self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
     ) -> OpView:
@@ -1325,6 +1307,7 @@ class TTIRBuilderOps:
             torch.bitwise_and, ttir.BitwiseAndOp, [in0, in1], unit_attrs=unit_attrs
         )
 
+    @autodoc_skip
     def bitwise_or(
         self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
     ) -> OpView:
@@ -1332,6 +1315,7 @@ class TTIRBuilderOps:
             torch.bitwise_or, ttir.BitwiseOrOp, [in0, in1], unit_attrs=unit_attrs
         )
 
+    @autodoc_skip
     def bitwise_xor(
         self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
     ) -> OpView:
@@ -1573,6 +1557,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def argmax_golden_function(
         self, in0: Operand, dim_arg: List[int], keep_dim: bool = False
     ) -> OpView:
@@ -1705,6 +1690,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def max(
         self,
         in0: Operand,
@@ -1779,6 +1765,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def min(
         self,
         in0: Operand,
@@ -1933,8 +1920,6 @@ class TTIRBuilderOps:
 
         The operation treats non-zero values as True and zero values as False when
         performing the logical OR.
-
-        Note: Boolean tensors are not supported by the runtime. Issue #1775
 
         Mathematical definition: reduce_or(x, dim) = OR(x[i]) for all i in dimension dim
 
@@ -2409,6 +2394,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def fill_cache(
         self,
         in0: Operand,
@@ -2459,6 +2445,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def update_cache(
         self,
         in0: Operand,
@@ -2666,6 +2653,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def conv2d_golden_function(
         self,
         input_tensor: Operand,
@@ -2821,6 +2809,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def conv_transpose2d_golden_function(
         self,
         input_tensor: Operand,
@@ -3034,6 +3023,7 @@ class TTIRBuilderOps:
 
         return untilized
 
+    @autodoc_skip
     def max_pool2d_golden_function(
         self,
         input_tensor: Operand,
@@ -3582,6 +3572,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def reverse(
         self, in0: Operand, dims: List[int], unit_attrs: Optional[List[str]] = None
     ) -> OpView:
@@ -3694,6 +3685,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def linear_golden_function(
         self,
         a: Operand,
@@ -3893,6 +3885,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def upsample2d_golden_function(
         self,
         in0: Operand,
