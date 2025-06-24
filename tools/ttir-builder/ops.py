@@ -4430,6 +4430,27 @@ class TTIRBuilderOps:
         all_gather_dim: int = None,
         cluster_axis: int = None,
     ) -> OpView:
+        """All Gather Operation
+
+        The `all_gather` operation performs a typical all gather over the devices on a system.
+
+        Args:
+            input: Input tensor to be gathered
+            all_gather_dim: The dimension over which to gather w.r.t the tensor dimensions
+            cluster_axis: Either `0` or `1`. This determines which direction
+                the gather takes place in w.r.t the shape of the mesh. For
+                example, if there was a mesh shape of [2,4] (i.e. device ids
+                are: [[0, 1, 2, 3], [4, 5, 6, 7]] and `cluster_axis` is `0`,
+                then the `0`th dimension will be used to gather, and there will
+                be 4 separate gathers taking place (i.e. (0, 4), (1, 5), (2,
+                6), & (3, 7)). If `cluster_axis` is instead set to `1`, the
+                first dimension will be used and there will be two gathers
+                (i.e. (0, 1, 2, 3) & (4, 5, 6, 7)).
+
+        Returns:
+            OpView: The tensor expanded in the `all_gather_dim` dimension with gathered data.
+
+        """
         kwargs = {"all_gather_dim": all_gather_dim, "cluster_axis": cluster_axis}
         return self.ccl_proxy(
             all_gather_golden,
@@ -4444,6 +4465,30 @@ class TTIRBuilderOps:
         reduce_type: str,
         cluster_axis: int,
     ) -> OpView:
+        """All Reduce Operation
+
+        The `all_reduce` operation performs a typical all reduce operation,
+        reducing `reduce_type` over other devices on the system and gathering
+        the results in the result of this op.
+
+        Args:
+            input: Input tensor to be reduced
+            reduce_type: The type of reduction to perform
+            cluster_axis: Either `0` or `1`. This determines which direction
+                the reduction takes place in w.r.t the shape of the mesh. For
+                example, if there was a mesh shape of [2,4] (i.e. device ids
+                are: [[0, 1, 2, 3], [4, 5, 6, 7]] and `cluster_axis` is `0`,
+                then the `0`th dimension will be used to reduce, and there will
+                be 4 separate reductions taking place (i.e. (0, 4), (1, 5), (2,
+                6), & (3, 7)). If `cluster_axis` is instead set to `1`, the
+                first dimension will be used and there will be two reductions
+                (i.e. (0, 1, 2, 3) & (4, 5, 6, 7)).
+
+        Returns:
+            OpView: The result of the reduction. This will be the same across
+            all devices that execute this `all_reduce`.
+
+        """
         kwargs = {
             "reduce_type": Attribute.parse(reduce_type),
             "cluster_axis": cluster_axis,
@@ -4462,6 +4507,33 @@ class TTIRBuilderOps:
         scatter_dim: int,
         cluster_axis: int,
     ) -> OpView:
+        """Reduce Scatter Operation
+
+        The `reduce_scatter` operation performs a typical reduce scatter over
+        devices on the system, using `reduce_type` as reduction function. The
+        results are then scattered back across the devices according to
+        `scatter_dim`
+
+        Args:
+            input: Input tensor to be reduced
+            reduce_type: The type of reduction to perform
+            scatter_dim: The dimension over which to scatter w.r.t the tensor
+            dimensions once the reduction is performed
+            cluster_axis: Either `0` or `1`. This determines which direction
+                the reduction takes place in w.r.t the shape of the mesh. For
+                example, if there was a mesh shape of [2,4] (i.e. device ids
+                are: [[0, 1, 2, 3], [4, 5, 6, 7]] and `cluster_axis` is `0`,
+                then the `0`th dimension will be used to reduce, and there will
+                be 4 separate reductions taking place (i.e. (0, 4), (1, 5), (2,
+                6), & (3, 7)). If `cluster_axis` is instead set to `1`, the
+                first dimension will be used and there will be two reductions
+                (i.e. (0, 1, 2, 3) & (4, 5, 6, 7)).
+
+        Returns:
+            OpView: The result of the reduction. This result will be different
+            across all the devices according to the scatter
+
+        """
         kwargs = {
             "reduce_type": Attribute.parse(reduce_type),
             "scatter_dim": scatter_dim,
@@ -4479,6 +4551,26 @@ class TTIRBuilderOps:
         input: Operand,
         source_target_pairs: List[Tuple[int, int]],
     ) -> OpView:
+        """Collective Permute Operation
+
+        This operation ingests a multi-device tensor spread across
+        multi-devices and will shuffle the data according to
+        source_target_pairs [['src', 'dest']].
+
+        Args:
+            input: The input tensor to be permuted
+            source_target_pairs: List of pairs of source and target device ids
+
+        Example:
+            For a 1x2 mesh, the following will take the device shard living in
+            device 0 and move it to device 1. The device shard living in device
+            1 will move to device 0. %source_target_pairs: [[0, 1], [1, 0]]
+
+            In the case of missing 'dest', the device shard living on that
+            device will contain values of 0. For example, device shard living
+            in device 0 will contain 0 values. %source_target_pairs: [[0, 1]]
+
+        """
         kwargs = {
             "source_target_pairs": source_target_pairs,
         }
