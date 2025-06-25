@@ -205,10 +205,15 @@ class TTIRBuilderOps:
 
     # class TTIR_ElementwiseUnaryOp
 
-    def abs(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
-        """Elementwise absolute value operation.
+    # class TTIR_ElementwiseUnaryOp
 
-        The abs operation computes the absolute value of each element in the input tensor.
+    def abs(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """### `ttir.abs` (tt::ttir::AbsOp)
+
+        _Elementwise absolute value operation._
+
+        The `abs` operation computes the absolute value of each element in the input tensor.
+
         For each element, it returns the magnitude of the value without regard to its sign:
         - For real numbers, it returns |x| (the non-negative value without sign)
 
@@ -216,17 +221,40 @@ class TTIRBuilderOps:
         produces the same result as applying it once: abs(abs(x)) = abs(x). The operation
         preserves the data type of the input.
 
+        Example:
+            ```mlir
+            # Compute absolute values of all elements in %input
+            %result = ttir.abs(%input, %output) : tensor<4x4xf32>, tensor<4x4xf32> -> tensor<4x4xf32>
+            # Input tensor:
+            # [[-2.5,  3.7,  0.0,  1.2], ... ]
+            # Output tensor:
+            # [[2.5, 3.7, 0.0, 1.2], ... ]
+
+            # Example with integer tensor
+            %result = ttir.abs(%int_input, %int_output) : tensor<10xi32>, tensor<10xi32> -> tensor<10xi32>
+            # Input tensor:
+            # [-5, 0, 3, -2, ...]
+            # Output tensor:
+            # [5, 0, 3, 2, ...]
+            ```
+
+        Mathematical definition: abs(x) = |x| = {
+          x  if x ≥ 0
+          -x if x < 0
+        }
+
+        Traits: `AlwaysSpeculatableImplTrait`, `TTIR_Broadcastable`, `TTIR_Idempotence`, `TwoOperands`
+
+        Interfaces: `ConditionallySpeculatable`, `DestinationStyleOpInterface`, `NoMemoryEffect (MemoryEffectOpInterface)`, `TTIROpInterface`, `TTIR_ElementwiseUnary`
+
+        Effects: `MemoryEffects::Effect{}`
+
         Args:
             in0: Input tensor
             unit_attrs: Optional list of unit attributes
 
         Returns:
             OpView: A tensor containing the absolute values of the input tensor
-
-        Example:
-            # Compute absolute values of all elements in input
-            # Input tensor: [[-2.5, 3.7, 0.0, 1.2], ...]
-            result = abs(input)
         """
         return self.eltwise_proxy(torch.abs, ttir.AbsOp, [in0], unit_attrs)
 
@@ -1962,6 +1990,7 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
+    @autodoc_skip
     def prod(
         self,
         in0: Operand,
@@ -4579,14 +4608,14 @@ class TTIRBuilderOps:
             scatter_dim: The dimension over which to scatter w.r.t the tensor
             dimensions once the reduction is performed
             cluster_axis: Either `0` or `1`. This determines which direction
-                the reduction takes place in w.r.t the shape of the mesh. For
-                example, if there was a mesh shape of [2,4] (i.e. device ids
-                are: [[0, 1, 2, 3], [4, 5, 6, 7]] and `cluster_axis` is `0`,
-                then the `0`th dimension will be used to reduce, and there will
-                be 4 separate reductions taking place (i.e. (0, 4), (1, 5), (2,
-                6), & (3, 7)). If `cluster_axis` is instead set to `1`, the
-                first dimension will be used and there will be two reductions
-                (i.e. (0, 1, 2, 3) & (4, 5, 6, 7)).
+            the reduction takes place in w.r.t the shape of the mesh. For
+            example, if there was a mesh shape of [2,4] (i.e. device ids
+            are: [[0, 1, 2, 3], [4, 5, 6, 7]] and `cluster_axis` is `0`,
+            then the `0`th dimension will be used to reduce, and there will
+            be 4 separate reductions taking place (i.e. (0, 4), (1, 5), (2,
+            6), & (3, 7)). If `cluster_axis` is instead set to `1`, the
+            first dimension will be used and there will be two reductions
+            (i.e. (0, 1, 2, 3) & (4, 5, 6, 7)).
 
         Returns:
             OpView: The result of the reduction. This result will be different
