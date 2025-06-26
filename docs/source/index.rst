@@ -33,6 +33,6 @@ API Reference
    :toctree:
    :recursive:
 
-   ttir_builder.ops
    ttir_builder.apis
    ttir_builder.utils
+   ttir_builder.ops

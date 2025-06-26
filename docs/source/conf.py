@@ -44,47 +44,33 @@ extensions = [
     "sphinx.ext.viewcode",
 ]
 
+# Autodoc settings
 autodoc_default_options = {
     "members": True,
-    "undoc-members": True,
+    "undoc-members": False,
     "show-inheritance": True,
     "inherited-members": True,
-    "private-members": True,
-    "special-members": "__init__",
-    "member-order": "bysource",
+    "private-members": False,
+    #    "special-members": "__init__",
+    #    "member-order": "alphabetical",
 }
 autodoc_docstring_signature = True
 autodoc_typehints = "description"
+autodoc_member_order = "bysource"
 
 # Napoleon settings
-napoleon_google_docstring = False
 napoleon_numpy_docstring = True
-napoleon_include_init_with_doc = True
-napoleon_include_private_with_doc = False
-napoleon_include_special_with_doc = True
-napoleon_use_admonition_for_examples = False
-napoleon_use_admonition_for_notes = True
-napoleon_use_admonition_for_references = False
-
-# Autodoc settings
-autodoc_member_order = "bysource"
-autodoc_class_member_order = "bysource"
-autodoc_typehints = "description"
-autodoc_docstring_signature = True
-autodoc_preserve_defaults = True
 
 # Autosummary settings
 autosummary_generate = True
 
-templates_path = ["_templates"]
+# Exclude patterns
 exclude_patterns = ["modules.rst", "ttir_builder.rst"]
-
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
-html_static_path = ["_static"]
 
 
 def autodoc_skip_member(app, what, name, obj, skip, options):

@@ -205,56 +205,40 @@ class TTIRBuilderOps:
 
     # class TTIR_ElementwiseUnaryOp
 
-    # class TTIR_ElementwiseUnaryOp
-
     def abs(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
-        """### `ttir.abs` (tt::ttir::AbsOp)
+        """
+        Creates ``ttir.abs``.
 
-        _Elementwise absolute value operation._
+        *Elementwise absolute value operation.*
 
-        The `abs` operation computes the absolute value of each element in the input tensor.
+        Computes the absolute value of each element in the input tensor.
 
-        For each element, it returns the magnitude of the value without regard to its sign:
-        - For real numbers, it returns |x| (the non-negative value without sign)
+        .. code-block:: mlir
 
-        This operation has the idempotence property, meaning that applying it multiple times
-        produces the same result as applying it once: abs(abs(x)) = abs(x). The operation
-        preserves the data type of the input.
-
-        Example:
-            ```mlir
-            # Compute absolute values of all elements in %input
+            // Compute absolute values of all elements in %input
             %result = ttir.abs(%input, %output) : tensor<4x4xf32>, tensor<4x4xf32> -> tensor<4x4xf32>
-            # Input tensor:
-            # [[-2.5,  3.7,  0.0,  1.2], ... ]
-            # Output tensor:
-            # [[2.5, 3.7, 0.0, 1.2], ... ]
+            // Input tensor:
+            // [[-2.5,  3.7,  0.0,  1.2], ... ]
+            // Output tensor:
+            // [[2.5, 3.7, 0.0, 1.2], ... ]
 
-            # Example with integer tensor
+            // Example with integer tensor
             %result = ttir.abs(%int_input, %int_output) : tensor<10xi32>, tensor<10xi32> -> tensor<10xi32>
-            # Input tensor:
-            # [-5, 0, 3, -2, ...]
-            # Output tensor:
-            # [5, 0, 3, 2, ...]
-            ```
+            // Input tensor:
+            // [-5, 0, 3, -2, ...]
+            // Output tensor:
+            // [5, 0, 3, 2, ...]
 
-        Mathematical definition: abs(x) = |x| = {
-          x  if x ≥ 0
-          -x if x < 0
-        }
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor to compute absolute value of
+        unit_attrs : *Optional[List[str]]*
+            Optional list of unit attributes
 
-        Traits: `AlwaysSpeculatableImplTrait`, `TTIR_Broadcastable`, `TTIR_Idempotence`, `TwoOperands`
-
-        Interfaces: `ConditionallySpeculatable`, `DestinationStyleOpInterface`, `NoMemoryEffect (MemoryEffectOpInterface)`, `TTIROpInterface`, `TTIR_ElementwiseUnary`
-
-        Effects: `MemoryEffects::Effect{}`
-
-        Args:
-            in0: Input tensor
-            unit_attrs: Optional list of unit attributes
-
-        Returns:
-            OpView: A tensor containing the absolute values of the input tensor
+        Returns
+        -------
+        *OpView*
         """
         return self.eltwise_proxy(torch.abs, ttir.AbsOp, [in0], unit_attrs)
 
