@@ -51,8 +51,6 @@ autodoc_default_options = {
     "show-inheritance": True,
     "inherited-members": True,
     "private-members": False,
-    #    "special-members": "__init__",
-    #    "member-order": "alphabetical",
 }
 autodoc_docstring_signature = True
 autodoc_typehints = "description"
