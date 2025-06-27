@@ -26,28 +26,64 @@ Shape = Union[List[int], Tuple[int, ...]]
 
 
 class TTIRBuilderAPIs:
-    """Builder class providing API for creating TTIR ops."""
+    """Builder class providing APIs for creating TTIR ops."""
 
     # ----- Public helpers -----
 
     @property
     def goldens(self) -> Dict:
+        """
+        Returns
+        -------
+        Dict
+            Dictionary mapping operands to their golden tensors
+        """
         return self._goldens
 
     @property
     def golden_check_level(self) -> GoldenCheckLevel:
+        """
+        Returns
+        -------
+        GoldenCheckLevel
+            Current golden check level
+        """
         return self._golden_check_level
 
     @golden_check_level.setter
     def golden_check_level(self, level: GoldenCheckLevel):
+        """
+        Sets golden check level.
+
+        Parameters
+        ----------
+        level : GoldenCheckLevel
+            The validation level to set
+        """
         if not isinstance(level, GoldenCheckLevel):
             raise ValueError("Invalid golden check level.")
         self._golden_check_level = level
 
     def get_context(self) -> Context:
+        """
+        Gets MLIR context.
+
+        Returns
+        -------
+        Context
+            The MLIR context
+        """
         return self._ctx
 
     def get_next_global_id(self) -> int:
+        """
+        Gets next global identifier.
+
+        Returns
+        -------
+        int
+            The next global identifier
+        """
         self._global_id += 1
         return self._global_id
 
@@ -67,17 +103,38 @@ class TTIRBuilderAPIs:
                 i += 1
 
     def get_shape(self, input: Operand) -> Shape:
-        """Retrieves shape of operand which is expected to be a shaped type."""
+        """
+        Gets tensor shape.
+
+        Parameters
+        ----------
+        input : Operand
+            The operand whose shape to retrieve
+
+        Returns
+        -------
+        Shape
+            The shape of the operand
+        """
         return self._get_type(input).shape
 
     def generate_and_store_random_golden(
         self, operand: Operand, dtype: Union[torch.dtype, TypeInfo] = torch.float32
     ) -> Golden:
         """
-        Generates random tensor of `dtype`s of `operand`s shape, assigns it to a golden,
-        and maps `operand` to that golden.
+        Creates and stores a random golden tensor.
 
-        Returns generated golden.
+        Parameters
+        ----------
+        operand : Operand
+            The operand to generate and store a golden for
+        dtype : Union[torch.dtype, TypeInfo], optional
+            Data type of the golden tensor (default: torch.float32)
+
+        Returns
+        -------
+        Golden
+            The generated golden tensor
         """
         seed = self._get_seed()
         random_tensor = self._generate_random_tensor(
@@ -97,6 +154,22 @@ class TTIRBuilderAPIs:
         """
         Generates random tensor of `dtype`s of `input`s shape, assigns it to a golden,
         and maps `input` to that golden.
+
+        Parameters
+        ----------
+        operand : Operand
+            The input operand to generate a golden for
+        dtype : Union[torch.dtype, TypeInfo]
+            Data type of the golden tensor
+        index : int
+            Index to use for mapping the golden
+        override : bool, optional
+            Whether to override existing golden (default: False)
+
+        Returns
+        -------
+        Golden
+            The generated golden tensor
         """
         if not override and f"input_{index}" in self.id_golden_map:
             return self.id_golden_map[f"input_{index}"]
@@ -105,6 +178,14 @@ class TTIRBuilderAPIs:
         return golden
 
     def get_golden_map(self) -> Dict:
+        """
+        Gets the golden tensor mapping.
+
+        Returns
+        -------
+        Dict
+            Mapping of golden tensor names to their GoldenTensor objects
+        """
         golden_info = {}
         if self.golden_check_level == GoldenCheckLevel.DISABLED:
             return golden_info
@@ -125,8 +206,15 @@ class TTIRBuilderAPIs:
             )
         return golden_info
 
-    # set mesh_shape for multi-device environment
     def set_mesh_shape(self, mesh_shape: Tuple[int, int]):
+        """
+        Sets the mesh shape for multi-device operations.
+
+        Parameters
+        ----------
+        mesh_shape : Tuple[int, int]
+            A tuple of (rows, columns) specifying the 2D mesh arrangement of devices
+        """
         self.mesh_shape = mesh_shape
 
     def set_graph_input_output(
@@ -137,6 +225,17 @@ class TTIRBuilderAPIs:
     ) -> None:
         """
         Records the input and output tensors for the graph.
+        Creates golden tensors for inputs and optionally for outputs.
+        Can override existing golden tensors if specified.
+
+        Parameters
+        ----------
+        inputs : List[torch.Tensor]
+            List of input tensors for the graph
+        outputs : Optional[List[torch.Tensor]], optional
+            List of output tensors for the graph (default: None)
+        override : bool, optional
+            Whether to override existing golden tensors (default: False)
         """
         for index, tensor in enumerate(inputs):
             input_key = f"input_{index}"
@@ -269,6 +368,16 @@ class TTIRBuilderAPIs:
     def get_datatype_from_torch_dtype(self, dtype: torch.dtype) -> DataType:
         """
         Returns a MLIR `DataType` obj corresponding to `dtype`.
+
+        Parameters
+        ----------
+        dtype : torch.dtype
+            The PyTorch data type to convert
+
+        Returns
+        -------
+        DataType
+            The corresponding MLIR data type
         """
         match dtype:
             case torch.float16:
@@ -283,7 +392,8 @@ class TTIRBuilderAPIs:
                 return DataType.Float32
 
     def get_type_from_torch_dtype(self, dtype: Union[torch.dtype, TypeInfo]) -> Type:
-        """Converts PyTorch dtype or TypeInfo to corresponding MLIR Type.
+        """
+        Converts PyTorch dtype or TypeInfo to corresponding MLIR Type.
 
         For quantized types (e.g. qint32), scale and zero_point must be provided via TypeInfo.
         For non-quantized types, a plain torch.dtype can be used.
@@ -293,10 +403,6 @@ class TTIRBuilderAPIs:
 
         Returns:
             MLIR Type corresponding to the input dtype.
-
-        Raises:
-            ValueError: If quantization parameters are missing for quantized types.
-            TypeError: If the dtype is not supported.
         """
         base_dtype = dtype.dtype if isinstance(dtype, TypeInfo) else dtype
 
@@ -350,7 +456,23 @@ class TTIRBuilderAPIs:
         data_type: Optional[Type] = None,
         encoding: Optional[Attribute] = None,
     ) -> RankedTensorType:
-        """Convenience wrapper constructing `RankedTensorType`."""
+        """
+        Convenience wrapper constructing `RankedTensorType`
+
+        Parameters
+        ----------
+        shape : Shape
+            The shape of the tensor type
+        data_type : Optional[Type], optional
+            The data type of the tensor (default: None)
+        encoding : Optional[Attribute], optional
+            Optional encoding attribute (default: None)
+
+        Returns
+        -------
+        RankedTensorType
+            The created ranked tensor type
+        """
         dtype = data_type if data_type is not None else self._default_dtype
 
         with self._ctx, self._loc:
@@ -365,6 +487,30 @@ class TTIRBuilderAPIs:
         collapseIntervals=[(0, -1)],
         oobVal=ttcore.OOBVal.Undef,
     ):
+        """
+        Creates a metal tensor layout with attributes including grid,
+        tiling, memory space, collapse intervals, and out-of-bounds value handling..
+
+        Parameters
+        ----------
+        shape : Shape
+            The shape of the tensor
+        grid : Union[List, Tuple, ttcore.ir.GridAttr]
+            Grid specification for the layout
+        tiled : bool, optional
+            Whether the layout is tiled (default: False)
+        memorySpace : ttcore.MemorySpace, optional
+            Memory space for the tensor (default: DeviceL1)
+        collapseIntervals : List[Tuple[int, int]], optional
+            Intervals to collapse (default: [(0, -1)])
+        oobVal : ttcore.OOBVal, optional
+            Out-of-bounds value handling (default: Undef)
+
+        Returns
+        -------
+        RankedTensorType
+            Tensor type with metal layout attributes
+        """
         ctx = self._ctx
         if isinstance(grid, list) or isinstance(grid, tuple):
             grid = ttcore.ir.GridAttr.get(ctx, list(grid))
@@ -379,7 +525,21 @@ class TTIRBuilderAPIs:
     def empty_from_tensor_type(
         self, shape: Shape, tensor_type: RankedTensorType
     ) -> OpView:
-        """Convenience wrapper constructing `ttir.EmptyOp`."""
+        """
+        Convenience wrapper constructing ``ttir.EmptyOp``
+
+        Parameters
+        ----------
+        shape : Shape
+            The shape of the empty tensor
+        tensor_type : RankedTensorType
+            The type of the tensor to create
+
+        Returns
+        -------
+        OpView
+            The created empty tensor operation
+        """
         with self._ctx, self._loc:
             op = ttir.EmptyOp(tensor_type)
             self.generate_and_store_random_golden(op)
@@ -415,32 +575,39 @@ class TTIRBuilderAPIs:
         loc: Optional[Union[str, Location]] = None,
     ) -> Any:
         """
-        Provides a general interface for proxy-ing OPs and creating them.
+        Create and return a TTIR operation using the provided golden and TTIR functions.
 
-        Parameters:
-        - op_golden_function (Callable): A function that creates the OP using a golden approach.
-        - op_ttir_function (Callable): A function that creates the OP using a TTIR approach.
-        - inputs (List[Operand]): A list of operands serving as inputs to the OP.
-        - organize_ttir_args (Callable): A function that organizes the inputs and other positional arguments for the TTIR approach.
-            - Function signature:
+        Parameters
+        ----------
+        op_golden_function : Callable
+            Function that creates the operation using golden approach
+        op_ttir_function : Callable
+            Function that creates the operation using TTIR approach
+        inputs : List[Operand]
+            List of input operands for the operation
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes (default: None)
+        organize_ttir_args : Optional[Callable], optional
+            Function to organize TTIR arguments (default: None)
+        organize_golden_args : Optional[Callable], optional
+            Function to organize golden arguments (default: None)
+        output_shape : Optional[Shape], optional
+            Shape of the output tensor (default: None)
+        output_type : Optional[Type], optional
+            Type of the output tensor (default: None)
+        output_create_fn : Optional[Callable], optional
+            Function to create output tensor (default: None)
+        golden_kwargs : dict, optional
+            Additional keyword arguments for golden function (default: {})
+        ttir_kwargs : dict, optional
+            Additional keyword arguments for TTIR function (default: {})
+        loc : Optional[Union[str, Location]], optional
+            Source location information (default: None)
 
-                def organize_ttir_args(inputs: List[Operand], output: OpView, output_shape: Optional[Shape]) -> List/Tuple
-
-                The list/tuple will then be unpacked as the positional arguments for the op_ttir_function
-
-        - organize_golden_args (Callable): A function that organizes the inputs and other arguments for the golden approach.
-            - Function signature:
-
-                def organize_golden_args(inputs: List[Operand], output: OpView, output_shape: Optional[Shape]) -> List/Tuple
-
-                The list/tuple will then be unpacked as the positional arugments for the op_golden_function
-        - output_shape (Optional[Shape]): An optional argument specifying the shape of the output of the OP.
-        - output_type (Optional[Type]): An optional argument specifying the type of the output of the OP.
-        - golden_kwargs (dict): Additional keyword arguments for the `op_golden_function`.
-        - ttir_kwargs (dict): Additional keyword arguments for the `op_ttir_function`.
-
-        Returns:
-        - OpView: The created op
+        Returns
+        -------
+        Any
+            The created operation
         """
         # Snoop the location of the first caller outside of this file to
         # annotate the MLIR with. NOTE that this location is _NOT_ row:col, but
@@ -534,6 +701,25 @@ class TTIRBuilderAPIs:
         inputs: List[Operand],
         unit_attrs: Optional[List[str]] = None,
     ) -> OpView:
+        """
+        Creates elementwise TTIR operations.
+
+        Parameters
+        ----------
+        op_golden_function : Callable
+            Function that creates the operation using golden approach
+        op_ttir_function : Callable
+            Function that creates the operation using TTIR approach
+        inputs : List[Operand]
+            List of input operands for the operation
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes (default: None)
+
+        Returns
+        -------
+        OpView
+            The created elementwise operation
+        """
         return self.op_proxy(op_golden_function, op_ttir_function, inputs, unit_attrs)
 
     def ccl_proxy(
@@ -543,6 +729,27 @@ class TTIRBuilderAPIs:
         inputs: List[Operand],
         kwargs: dict = {},
     ) -> OpView:
+        """
+        Creates CCL TTIR operations. Forces
+        golden check level to GRAPH_LEVEL and provides specialized argument
+        organization for CCL operations.
+
+        Parameters
+        ----------
+        op_golden_function : Callable
+            Function that creates the operation using golden approach
+        op_ttir_function : Callable
+            Function that creates the operation using TTIR approach
+        inputs : List[Operand]
+            List of input operands for the operation
+        kwargs : dict, optional
+            Additional keyword arguments for both golden and TTIR functions (default: {})
+
+        Returns
+        -------
+        OpView
+            The created CCL operation
+        """
         # Force GoldenCheckLevel to GRAPH_LEVEL when CCL Ops are used(phase 0)
         self.golden_check_level = GoldenCheckLevel.GRAPH_LEVEL
         return self.op_proxy(

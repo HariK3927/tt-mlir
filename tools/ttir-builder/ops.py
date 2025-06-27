@@ -46,7 +46,7 @@ class TTIRBuilderOps:
             Input tensor operand to get dimension size from
         dimension : int, optional
             The dimension index to get size of (default: 0)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -103,7 +103,7 @@ class TTIRBuilderOps:
             Batch dimensions for the right-hand side tensor
         contract_dims_rhs : List[int]
             Contracting dimensions for the right-hand side tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -211,7 +211,7 @@ class TTIRBuilderOps:
             Tensor containing values to select when condition is true
         in2 : Operand
             Tensor containing values to select when condition is false
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -296,7 +296,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -329,7 +329,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -361,7 +361,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor (values in radians)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -384,7 +384,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -419,7 +419,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -455,7 +455,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -488,7 +488,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -541,7 +541,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -576,7 +576,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -598,7 +598,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -620,7 +620,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -642,7 +642,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -667,7 +667,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -692,7 +692,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -714,7 +714,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -736,7 +736,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -759,7 +759,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -781,7 +781,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -803,7 +803,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -841,7 +841,7 @@ class TTIRBuilderOps:
             Input tensor to cast
         out : Operand
             Output tensor with desired type
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -881,7 +881,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -913,7 +913,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -946,7 +946,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -992,7 +992,7 @@ class TTIRBuilderOps:
             Input tensor to be activated
         parameter : float, optional
             Slope for negative values (default: 0.01)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1048,7 +1048,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1099,7 +1099,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1144,7 +1144,7 @@ class TTIRBuilderOps:
             First input tensor (left-hand side)
         in1 : Operand
             Second input tensor (right-hand side)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1192,7 +1192,7 @@ class TTIRBuilderOps:
             First input tensor (left-hand side)
         in1 : Operand
             Second input tensor (right-hand side)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1240,7 +1240,7 @@ class TTIRBuilderOps:
             First input tensor (left-hand side)
         in1 : Operand
             Second input tensor (right-hand side)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1287,7 +1287,7 @@ class TTIRBuilderOps:
             First input tensor (left-hand side)
         in1 : Operand
             Second input tensor (right-hand side)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1336,7 +1336,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1386,7 +1386,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1434,7 +1434,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1484,7 +1484,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1528,7 +1528,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1570,7 +1570,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1599,7 +1599,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1641,7 +1641,7 @@ class TTIRBuilderOps:
             First input tensor (minuend)
         in1 : Operand
             Second input tensor (subtrahend)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1669,7 +1669,7 @@ class TTIRBuilderOps:
             First input tensor (dividend)
         in1 : Operand
             Second input tensor (divisor)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1697,7 +1697,7 @@ class TTIRBuilderOps:
             First input tensor (base)
         in1 : Operand
             Second input tensor (exponent)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1733,7 +1733,7 @@ class TTIRBuilderOps:
             Dimensions to reduce over
         keep_dim : bool, optional
             If True, retains reduced dimensions with length 1 (default: False)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1775,16 +1775,15 @@ class TTIRBuilderOps:
         If `dim_arg` is not provided, the sum is computed over all dimensions. If `keep_dim` is True,
         the reduced dimensions are retained with a size of 1.
 
-        Example:
-        ```mlir
-        // Sum along dimension 1
-        %input = ... : tensor<2x3xf32>
-        %output = ttir.empty() : tensor<2xf32>
-        %result = ttir.sum(%input, %output) {keep_dim = false, dim_arg = [1: i32]} : tensor<2x3xf32>, tensor<2xf32> -> tensor<2xf32>
-        // Input: [[1.0, 2.0, 3.0],
-        //         [4.0, 5.0, 6.0]]
-        // Output: [6.0, 15.0]  // Sum of each row
-        ```
+        .. code-block:: mlir
+
+            // Sum along dimension 1
+            %input = ... : tensor<2x3xf32>
+            %output = ttir.empty() : tensor<2xf32>
+            %result = ttir.sum(%input, %output) {keep_dim = false, dim_arg = [1: i32]} : tensor<2x3xf32>, tensor<2xf32> -> tensor<2xf32>
+            // Input: [[1.0, 2.0, 3.0],
+            //         [4.0, 5.0, 6.0]]
+            // Output: [6.0, 15.0]  // Sum of each row
 
         Parameters
         ----------
@@ -1794,7 +1793,7 @@ class TTIRBuilderOps:
             Dimensions to reduce over (default: [0])
         keep_dim : bool, optional
             If True, retains reduced dimensions with length 1 (default: True)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1834,7 +1833,7 @@ class TTIRBuilderOps:
             Dimensions to reduce over (default: [0])
         keep_dim : bool, optional
             If True, retains reduced dimensions with length 1 (default: True)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1873,7 +1872,7 @@ class TTIRBuilderOps:
             Dimension to reduce over (default: None, reduces over all dimensions)
         keep_dim : bool, optional
             If True, retains reduced dimensions with length 1 (default: True)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1923,7 +1922,7 @@ class TTIRBuilderOps:
             Dimension to reduce over (default: None, reduces over all dimensions)
         keep_dim : bool, optional
             If True, retains reduced dimensions with length 1 (default: True)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -1975,7 +1974,7 @@ class TTIRBuilderOps:
             If True, retains reduced dimensions with length 1 (default: True)
         dim_args : Optional[List], optional
             Dimensions to reduce over (default: None, reduces over all dimensions)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2016,7 +2015,7 @@ class TTIRBuilderOps:
             If True, retains reduced dimensions with length 1 (default: True)
         dim_args : Optional[List], optional
             Dimensions to reduce over (default: None, reduces over all dimensions)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2055,7 +2054,7 @@ class TTIRBuilderOps:
             Dimensions to reduce over
         keep_dim : bool, optional
             If True, retains reduced dimensions with length 1 (default: False)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2111,7 +2110,7 @@ class TTIRBuilderOps:
             Input tensor containing indices
         in1 : Operand
             Weight tensor containing embeddings
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2167,7 +2166,7 @@ class TTIRBuilderOps:
             Output tensor
         dim : int
             Dimension along which to compute cumulative sum
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2203,7 +2202,7 @@ class TTIRBuilderOps:
             Input tensor
         dim : int, optional
             Dimension along which Softmax will be computed (default: -1)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2247,7 +2246,7 @@ class TTIRBuilderOps:
             First dimension to swap (default: 0)
         dim1 : int, optional
             Second dimension to swap (default: 1)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2282,7 +2281,7 @@ class TTIRBuilderOps:
             List of input tensors to concatenate
         dim : int, optional
             Dimension along which to concatenate (default: 0)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2321,7 +2320,7 @@ class TTIRBuilderOps:
             Input tensor
         dims : List[int]
             Number of repetitions for each dimension
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2361,7 +2360,7 @@ class TTIRBuilderOps:
             Number of repetitions for each element
         dim : int
             Dimension along which to repeat
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2425,7 +2424,7 @@ class TTIRBuilderOps:
             Cache tensor to be filled
         batch_offset : int, optional
             Starting position in batch dimension (default: 0)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2495,7 +2494,7 @@ class TTIRBuilderOps:
             Mask tensor indicating which values to update
         batch_offset : int, optional
             Starting position in batch dimension (default: 0)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2553,7 +2552,7 @@ class TTIRBuilderOps:
             Output tensor with target shape
         broadcast_dimensions : List[int]
             List of dimension mappings from input to output
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2591,20 +2590,19 @@ class TTIRBuilderOps:
         This operation performs a 2D convolution on the input tensor using the provided weight tensor
         and optional bias. It supports configurable stride, padding, dilation, and grouping parameters.
 
-        Example:
-        ```mlir
-        // Basic 2D convolution
-        %input = ... : tensor<1x28x28x3xf32>    // Batch size 1, 28x28 image, 3 channels
-        %weight = ... : tensor<16x3x3x3xf32>    // 16 output channels, 3 input channels, 3x3 kernel
-        %bias = ... : tensor<1x1x1x16xf32>      // Bias for 16 output channels
-        %output = ttir.empty() : tensor<1x26x26x16xf32>  // Output shape with no padding
-        %result = ttir.conv2d(%input, %weight, %bias, %output) {
-            stride = [1, 1],
-            padding = [0, 0, 0, 0],
-            dilation = [1, 1],
-            groups = 1
-        }
-        ```
+        .. code-block:: mlir
+
+            // Basic 2D convolution
+            %input = ... : tensor<1x28x28x3xf32>    // Batch size 1, 28x28 image, 3 channels
+            %weight = ... : tensor<16x3x3x3xf32>    // 16 output channels, 3 input channels, 3x3 kernel
+            %bias = ... : tensor<1x1x1x16xf32>      // Bias for 16 output channels
+            %output = ttir.empty() : tensor<1x26x26x16xf32>  // Output shape with no padding
+            %result = ttir.conv2d(%input, %weight, %bias, %output) {
+                stride = [1, 1],
+                padding = [0, 0, 0, 0],
+                dilation = [1, 1],
+                groups = 1
+            }
 
         Parameters
         ----------
@@ -2624,7 +2622,7 @@ class TTIRBuilderOps:
             Spacing between kernel elements (default: 1)
         groups : int, optional
             Number of blocked connections from input to output channels (default: 1)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2753,7 +2751,7 @@ class TTIRBuilderOps:
             Dilation of the kernel
         groups : int
             Number of blocked connections from input to output channels
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -2880,7 +2878,7 @@ class TTIRBuilderOps:
             Controls spacing between kernel elements (default: 1)
         ceil_mode : bool, optional
             When True, use ceil instead of floor for output shape (default: False)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3011,14 +3009,13 @@ class TTIRBuilderOps:
         The total number of elements in the tensor must remain the same after reshaping. This operation is
         commonly used in neural networks to change the dimensionality of tensors between layers.
 
-        Example:
-        ```mlir
-        // Reshape a 2x3 tensor to a 1x6 tensor
-        %input = ... : tensor<2x3xf32>  // Input tensor with shape [2,3]
-        %output = ttir.empty() : tensor<1x6xf32>  // Output tensor with shape [1,6]
-        %result = ttir.reshape(%input, %output) {shape = [1, 6]} :
-            tensor<2x3xf32>, tensor<1x6xf32> -> tensor<1x6xf32>
-        ```
+        .. code-block:: mlir
+
+            // Reshape a 2x3 tensor to a 1x6 tensor
+            %input = ... : tensor<2x3xf32>  // Input tensor with shape [2,3]
+            %output = ttir.empty() : tensor<1x6xf32>  // Output tensor with shape [1,6]
+            %result = ttir.reshape(%input, %output) {shape = [1, 6]} :
+                tensor<2x3xf32>, tensor<1x6xf32> -> tensor<1x6xf32>
 
         Parameters
         ----------
@@ -3026,7 +3023,7 @@ class TTIRBuilderOps:
             Input tensor to reshape
         shape : Shape
             The new shape for the tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3070,7 +3067,7 @@ class TTIRBuilderOps:
             Amount of padding for each dimension
         value : int
             Value to use for padding
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3122,7 +3119,7 @@ class TTIRBuilderOps:
             Length of the slice (default: 2)
         stride : int, optional
             Stride between elements (default: 2)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3174,7 +3171,7 @@ class TTIRBuilderOps:
             Ending index (exclusive)
         step : int
             Step size between indices
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3218,7 +3215,7 @@ class TTIRBuilderOps:
             Input tensor
         dim : Optional[int], optional
             Dimension to squeeze (default: 0)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3255,7 +3252,7 @@ class TTIRBuilderOps:
             Input tensor
         dim : Optional[int], optional
             Position to insert the new dimension (default: 0)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3336,7 +3333,7 @@ class TTIRBuilderOps:
         ----------
         shape : Shape
             Shape of the output tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3369,7 +3366,7 @@ class TTIRBuilderOps:
         ----------
         shape : Shape
             Shape of the output tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3405,7 +3402,7 @@ class TTIRBuilderOps:
             Input tensor
         dims : List[int]
             Dimensions to reverse
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3446,7 +3443,7 @@ class TTIRBuilderOps:
             Weight matrix
         bias : Optional[Operand], optional
             Bias vector (default: None)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3525,7 +3522,7 @@ class TTIRBuilderOps:
             Input tensor
         permutation : List[int]
             The desired ordering of dimensions
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3611,7 +3608,7 @@ class TTIRBuilderOps:
             Ending value (exclusive)
         step : int, optional
             Step size between values (default: 1)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3675,7 +3672,7 @@ class TTIRBuilderOps:
         ----------
         in0 : Operand
             Input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3717,7 +3714,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3762,7 +3759,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3807,7 +3804,7 @@ class TTIRBuilderOps:
             First input tensor (minuend)
         in1 : Operand
             Second input tensor (subtrahend)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3854,7 +3851,7 @@ class TTIRBuilderOps:
             First input tensor (dividend)
         in1 : Operand
             Second input tensor (divisor)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3882,7 +3879,7 @@ class TTIRBuilderOps:
             First input tensor
         in1 : Operand
             Second input tensor
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3909,7 +3906,7 @@ class TTIRBuilderOps:
 
         Converts a floating-point tensor into a quantized integer tensor using the specified
         scale and zero_point parameters. For each element in the input tensor, computes:
-            output[i] = (input[i] / scale) + zero_point
+        output[i] = (input[i] / scale) + zero_point
 
         .. code-block:: mlir
 
@@ -3932,7 +3929,7 @@ class TTIRBuilderOps:
             Integer value that represents 0.0 in the quantized space
         dtype : torch.dtype
             Target integer data type for quantization (e.g., torch.int8)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -3969,8 +3966,7 @@ class TTIRBuilderOps:
 
         Converts a quantized integer tensor back into a floating-point tensor using the
         specified scale and zero_point parameters. For each element in the input tensor,
-        computes:
-            output[i] = (input[i] - zero_point) * scale
+        computes: output[i] = (input[i] - zero_point) * scale
 
         .. code-block:: mlir
 
@@ -3993,7 +3989,7 @@ class TTIRBuilderOps:
             Integer value that represents 0.0 in the quantized space
         dtype : torch.dtype
             Target floating-point data type (e.g., torch.float32)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -4024,7 +4020,7 @@ class TTIRBuilderOps:
 
         Converts a quantized integer tensor from one quantization scheme to another using
         new scale and zero-point parameters. For each element in the input tensor, computes:
-            output[i] = round((input[i] - input_zero_point) * (input_scale / output_scale)) + output_zero_point
+        output[i] = round((input[i] - input_zero_point) * (input_scale / output_scale)) + output_zero_point
 
         .. code-block:: mlir
 
@@ -4047,7 +4043,7 @@ class TTIRBuilderOps:
             New integer value that represents 0.0 in the quantized space
         dtype : torch.dtype
             Target integer data type (e.g., torch.int8)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -4100,7 +4096,7 @@ class TTIRBuilderOps:
             Input tensor to be transformed
         output_type : RankedTensorType
             Target type specifying the desired layout
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
         **kwargs : dict
             Additional keyword arguments for layout transformation
@@ -4158,7 +4154,7 @@ class TTIRBuilderOps:
             Type of output tensor with desired layout
         reinterpret_layout : bool, optional
             If true, allows data type cast in layout view change (default: False)
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -4211,7 +4207,7 @@ class TTIRBuilderOps:
             Input tensor to be tiled
         output_type : RankedTensorType
             Target type specifying the desired tiled layout
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -4263,7 +4259,7 @@ class TTIRBuilderOps:
             Input tensor with tiled layout
         output_type : RankedTensorType
             Target type specifying the desired standard layout
-        unit_attrs : Optional[List[str]], optional
+        unit_attrs : *Optional[List[str]]*, optional
             Optional list of unit attributes
 
         Returns
@@ -4369,7 +4365,7 @@ class TTIRBuilderOps:
 
         For a mesh shape of [2,4] with device IDs:
         [[0, 1, 2, 3],
-         [4, 5, 6, 7]]
+        [4, 5, 6, 7]]
 
         - If cluster_axis=0: Gathers along columns (0,4), (1,5), (2,6), (3,7)
         - If cluster_axis=1: Gathers along rows (0,1,2,3), (4,5,6,7)

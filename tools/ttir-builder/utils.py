@@ -28,12 +28,41 @@ TT_MLIR_HOME = os.environ.get("TT_MLIR_HOME", "")
 OUTPUT_PATH = ""
 
 
-# Convenience class for adding pytest marks
 class Marks:
+    """
+    Convenience class for adding pytest marks.
+
+    Example
+    -------
+    >>> skip_test = Marks(pytest.mark.skip)
+    >>> test_case | skip_test  # Marks test_case to be skipped
+    """
+
     def __init__(self, *marks):
+        """
+        Initialize with pytest marks.
+
+        Parameters
+        ----------
+        *marks : tuple
+            Variable number of pytest.mark objects
+        """
         self.marks = marks
 
     def __ror__(self, lhs):
+        """
+        Apply marks to a test parameter.
+
+        Parameters
+        ----------
+        lhs : Any
+            Test parameter to mark
+
+        Returns
+        -------
+        pytest.param
+            Marked test parameter
+        """
         return pytest.param(lhs, marks=self.marks)
 
 
@@ -41,10 +70,31 @@ class Marks:
 
 
 def shape_str(shape):
+    """
+    Converts shape tuple to string.
+
+    Parameters
+    ----------
+    shape : Union[Tuple[int, ...], List[int]]
+        Shape to convert to string
+
+    Returns
+    -------
+    str
+        String representation of the shape (e.g., '32x32' for shape (32, 32))
+    """
     return "x".join(map(str, shape))
 
 
 def set_output_path(path):
+    """
+    Sets global output path.
+
+    Parameters
+    ----------
+    path : str
+        Path to set as output directory
+    """
     global OUTPUT_PATH
     if not os.path.exists(path):
         raise ValueError(f"The provided path '{path}' is not a valid path.")
@@ -52,6 +102,23 @@ def set_output_path(path):
 
 
 def get_target_path(output_path, filename, target):
+    """
+    Gets target file path.
+
+    Parameters
+    ----------
+    output_path : str
+        Base output directory
+    filename : str
+        Name of the file
+    target : str
+        Target subdirectory name
+
+    Returns
+    -------
+    str
+        Full path to the target file
+    """
     target_dir = os.path.join(output_path, target)
     if not os.path.exists(target_dir):
         os.makedirs(target_dir)
@@ -61,6 +128,24 @@ def get_target_path(output_path, filename, target):
 def create_custom_pipeline_fn(
     pipeline: str, verify: bool = True, print_ir: Union[bool, str] = False
 ) -> Callable:
+    """
+    Creates a custom pipeline function.
+
+    Parameters
+    ----------
+    pipeline : str
+        Pipeline string specification
+    verify : bool, optional
+        Whether to enable verification (default: True)
+    print_ir : Union[bool, str], optional
+        If True or a path string, enables IR printing (default: False)
+
+    Returns
+    -------
+    Callable
+        Function that runs the custom pipeline on a module
+    """
+
     def wrapper(module, device_register_options):
         register_device = "ttcore-register-device"
         if device_register_options:
