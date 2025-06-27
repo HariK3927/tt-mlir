@@ -8,6 +8,7 @@ import torch
 import pytest
 from typing import Callable, List, Optional, Tuple, Union, Literal, Dict
 
+from ttmlir import optimizer_overrides
 from ttmlir.dialects import func
 from ttmlir.ir import *
 from ttmlir.passmanager import PassManager
@@ -27,6 +28,16 @@ TT_MLIR_HOME = os.environ.get("TT_MLIR_HOME", "")
 # Default output to the current directory from where this module is being invoked
 OUTPUT_PATH = ""
 
+OVERRIDE_PARAMETER_DISABLED_STR = "None"
+
+OPTIMIZER_DISABLED_POLICY = "Optimizer Disabled"
+
+OPTIMIZATION_POLICIES = {
+    OPTIMIZER_DISABLED_POLICY: False,
+    "DF Sharding": optimizer_overrides.MemoryLayoutAnalysisPolicyType.DFSharding,
+    "Greedy L1 Interleaved": optimizer_overrides.MemoryLayoutAnalysisPolicyType.GreedyL1Interleaved,
+    "BF Interleaved": optimizer_overrides.MemoryLayoutAnalysisPolicyType.BFInterleaved,
+}
 
 # Convenience class for adding pytest marks
 class Marks:
@@ -77,6 +88,131 @@ def create_custom_pipeline_fn(
             pm.run(module.operation)
 
     return wrapper
+
+
+def settings_to_overrides(settings, artifacts_dir):
+    override_handler = optimizer_overrides.OptimizerOverridesHandler()
+    override_handler.set_system_desc_path(f"{artifacts_dir}/system_desc.ttsys")
+
+    # Parse optimization policy from settings.
+    optimization_policy = settings.get("optimizationPolicy")
+    if optimization_policy not in OPTIMIZATION_POLICIES:
+        raise ValueError(f"Invalid optimization policy selected: {optimization_policy}")
+
+    if optimization_policy == OPTIMIZER_DISABLED_POLICY:
+        override_handler.set_enable_optimizer(False)
+    else:
+        override_handler.set_enable_optimizer(True)
+        override_handler.set_enable_memory_layout_analysis(False)
+        override_handler.set_memory_layout_analysis_policy(
+            OPTIMIZATION_POLICIES[optimization_policy]
+        )
+
+    # Convert settings to output layout overrides.
+    if settings.get("overrides"):
+        for op_id, overrides in settings["overrides"].items():
+            op_name_loc = overrides["named_location"]
+            output_layout_override = optimizer_overrides.OutputLayoutOverrideParams()
+            conv2d_config_override = optimizer_overrides.Conv2dConfigOverrideParams()
+            for attr in overrides["attributes"]:
+                match attr["key"]:
+                    case "data_type":
+                        output_layout_override.set_data_type_from_str(attr["value"])
+                    case "memory_layout":
+                        output_layout_override.set_memory_layout_from_str(attr["value"])
+                    case "buffer_type":
+                        output_layout_override.set_buffer_type_from_str(attr["value"])
+                    case "tensor_memory_layout":
+                        output_layout_override.set_tensor_memory_layout_from_str(
+                            attr["value"]
+                        )
+                    case "grid_shape":
+                        output_layout_override.grid = [
+                            int(x) for x in attr["value"].strip("[]").split("x")
+                        ]
+                    case "dtype":
+                        conv2d_config_override.set_dtype_from_str(attr["value"])
+                    case "weights_dtype":
+                        conv2d_config_override.set_weights_dtype_from_str(attr["value"])
+                    case "activation":
+                        conv2d_config_override.set_activation_from_str(
+                            "none"
+                            if attr["value"] == OVERRIDE_PARAMETER_DISABLED_STR
+                            else attr["value"]
+                        )
+                    case "deallocate_activation":
+                        conv2d_config_override.set_deallocate_activation_from_str(
+                            attr["value"]
+                        )
+                    case "reallocate_halo_output":
+                        conv2d_config_override.set_reallocate_halo_output_from_str(
+                            attr["value"]
+                        )
+                    case "act_block_h_override":
+                        conv2d_config_override.set_act_block_h_override_from_str(
+                            attr["value"].strip("[]")
+                        )
+                    case "act_block_w_div":
+                        conv2d_config_override.set_act_block_w_div_from_str(
+                            attr["value"].strip("[]")
+                        )
+                    case "reshard_if_not_optimal":
+                        conv2d_config_override.set_reshard_if_not_optimal_from_str(
+                            attr["value"]
+                        )
+                    case "override_sharding_config":
+                        conv2d_config_override.set_override_sharding_config_from_str(
+                            attr["value"]
+                        )
+                    case "shard_layout":
+                        if attr["value"] != OVERRIDE_PARAMETER_DISABLED_STR:
+                            conv2d_config_override.set_shard_layout_from_str(
+                                attr["value"]
+                            )
+                    case "core_grid":
+                        conv2d_config_override.set_core_grid_from_str(attr["value"])
+                    case "transpose_shards":
+                        conv2d_config_override.set_transpose_shards_from_str(
+                            attr["value"]
+                        )
+                    case "output_layout":
+                        conv2d_config_override.set_output_layout_from_str(attr["value"])
+                    case "preprocess_weights_on_device":
+                        conv2d_config_override.set_preprocess_weights_on_device_from_str(
+                            attr["value"]
+                        )
+                    case "always_preprocess_weights":
+                        conv2d_config_override.set_always_preprocess_weights_from_str(
+                            attr["value"]
+                        )
+                    case "enable_act_double_buffer":
+                        conv2d_config_override.set_enable_act_double_buffer_from_str(
+                            attr["value"]
+                        )
+                    case "enable_weights_double_buffer":
+                        conv2d_config_override.set_enable_weights_double_buffer_from_str(
+                            attr["value"]
+                        )
+                    case "enable_split_reader":
+                        conv2d_config_override.set_enable_split_reader_from_str(
+                            attr["value"]
+                        )
+                    case "enable_subblock_padding":
+                        conv2d_config_override.set_enable_subblock_padding_from_str(
+                            attr["value"]
+                        )
+                    case _:
+                        raise ValueError(f"Invalid override attribute: {attr['key']}")
+            if not output_layout_override.empty():
+                override_handler.add_output_layout_override(
+                    op_name_loc, output_layout_override
+                )
+            if not conv2d_config_override.empty():
+                override_handler.add_conv2d_config_override(
+                    op_name_loc, conv2d_config_override
+                )
+
+    return override_handler.to_string()
 
 
 def build_mlir_module(
@@ -220,6 +356,7 @@ def run_pipeline(
     system_desc_path: Optional[str] = None,
     mesh_shape: Optional[Tuple[int, int]] = None,
     argument_types_string: Optional[str] = None,
+    settings: Optional[Dict[str, str]] = None,
 ):
     """
     Runs a pipeline over a module and optionally dumps to file.
@@ -251,12 +388,16 @@ def run_pipeline(
         system_desc_path = os.getenv("SYSTEM_DESC_PATH", "")
 
     # Generate option string
-    if system_desc_path:
-        pipeline_options.append(f"system-desc-path={system_desc_path}")
+    # if system_desc_path:
+    #    pipeline_options.append(f"system-desc-path={system_desc_path}")
     if mesh_shape and len(mesh_shape) == 2:
         pipeline_options.append(f"mesh-shape={mesh_shape[0]},{mesh_shape[1]}")
     if argument_types_string:
         pipeline_options.append("enable-const-eval=true")
+    if settings:
+        overrides = settings_to_overrides(settings, os.path.dirname(output_file_name))
+        pipeline_options.append(overrides)
+    print(f"Pipeline options: {pipeline_options}")
 
     # Now, pass it through the pipeline. Module gets modified in place.
     pipeline_fn(module, " ".join(pipeline_options))
@@ -282,6 +423,7 @@ def compile_to_flatbuffer(
     argument_types_string: Optional[str] = None,
     custom_pipeline: Optional[Union[Callable, str]] = None,
     pipeline_options: Optional[List[str]] = None,
+    settings: Optional[Dict[str, str]] = None,
     print_ir: Union[bool, str] = False,
 ):
     """
@@ -349,6 +491,9 @@ def compile_to_flatbuffer(
     if pipeline_options is None:
         pipeline_options = []
 
+    if settings is None:
+        settings = {}
+
     pipeline_fn: Callable
     to_flatbuffer: Callable
     mlir_suffix: str
@@ -394,6 +539,7 @@ def compile_to_flatbuffer(
         system_desc_path=system_desc_path,
         mesh_shape=mesh_shape,
         argument_types_string=argument_types_string,
+        settings=settings,
     )
     print(f"{target} pipeline ran successfully.")
 
