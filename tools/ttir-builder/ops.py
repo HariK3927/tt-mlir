@@ -25,9 +25,6 @@ Shape = Union[List[int], Tuple[int, ...]]
 
 
 class TTIRBuilderOps:
-
-    # TTIR top level ops
-
     def get_dimension_size(
         self, in0: Operand, dimension: int = 0, unit_attrs: Optional[List[str]] = None
     ) -> OpView:
@@ -36,15 +33,12 @@ class TTIRBuilderOps:
 
         *Dimension size query operation.*
 
-        Returns the size of the specified dimension of the input tensor.
+        Produces the size of the given `dimension` of the `operand`.
 
         .. code-block:: mlir
 
-            // Get size of dimension 0 from input tensor
-            %result = ttir.get_dimension_size(%input) {
-              dimension = 0
-            } : tensor<3x2x7xf32> -> tensor<i32>
-            // Result: tensor<i32> with value [3]
+            %operand: [[3, 2, 7], [1, 4, 4]]
+            "ttir.get_dimension_size"(%operand, value = dense<0>, %out) -> %out: [[3]]
 
         Parameters
         ----------
@@ -72,7 +66,6 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
-    @autodoc_skip
     def dot_general(
         self,
         in0: Operand,
@@ -89,30 +82,10 @@ class TTIRBuilderOps:
 
         *Generalized dot product operation.*
 
-        A flexible tensor operation that generalizes matrix multiplication by allowing user to specify which
+        Flexible tensor operation that generalizes matrix multiplication by allowing user to specify which
         dimensions of two tensors to contract. Matrix multiplication is a special case of this operation,
-        where the contraction happens along the last axis of the first tensor and the second-to-last axis
-        of the second tensor.
-
-        Based on StableHLO DotGeneral Op (https://openxla.org/stablehlo/spec#dot_general)
-
-        .. code-block:: mlir
-
-            // Matrix multiplication example
-            %result = ttir.dot_general(%lhs, %rhs, %out) {
-              batch_dims_lhs = [],
-              contract_dims_lhs = [1],
-              batch_dims_rhs = [],
-              contract_dims_rhs = [0]
-            } : tensor<2x3xf32>, tensor<3x4xf32>, tensor<2x4xf32> -> tensor<2x4xf32>
-
-            // Batched matrix multiplication
-            %result = ttir.dot_general(%lhs, %rhs, %out) {
-              batch_dims_lhs = [0],
-              contract_dims_lhs = [2],
-              batch_dims_rhs = [0],
-              contract_dims_rhs = [1]
-            } : tensor<10x2x3xf32>, tensor<10x4x3xf32>, tensor<10x2x4xf32> -> tensor<10x2x4xf32>
+        where the contraction happens along the last axis of the first tensor and the second-to-last axis of the second tensor.
+        From StableHLO DotGeneral Op https://openxla.org/stablehlo/spec#dot_general
 
         Parameters
         ----------
@@ -263,8 +236,6 @@ class TTIRBuilderOps:
 
     # class TTIR_ElementwiseUnaryOp
 
-    # class TTIR_ElementwiseUnaryOp
-
     def abs(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """
         Creates ``ttir.abs``.
@@ -345,26 +316,14 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
-    def gelu(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+    def ceil(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """
-        Creates ``ttir.gelu``.
+        Creates ``ttir.ceil``.
 
-        *Elementwise GELU operation.*
+        *Elementwise ceiling operation.*
 
-        Computes the GELU (Gaussian Error Linear Unit) of each element in the input tensor.
-        GELU is a smooth, non-monotonic activation function that approximates the cumulative
-        distribution function of a standard normal distribution.
-
-        Mathematical definition: gelu(x) = 0.5 * x * (1 + erf(x / sqrt(2)))
-
-        .. code-block:: mlir
-
-            // Compute GELU of all elements
-            %result = ttir.gelu(%input, %output) : tensor<4xf32>, tensor<4xf32> -> tensor<4xf32>
-            // Input tensor:
-            // [1.0, -0.5, 2.0, -2.0]
-            // Output tensor:
-            // [0.841, -0.154, 1.954, -0.046]
+        Computes the ceiling of each element in the input tensor, rounding up to the nearest integer.
+        This operation is idempotent.
 
         Parameters
         ----------
@@ -376,9 +335,9 @@ class TTIRBuilderOps:
         Returns
         -------
         *OpView*
-            A tensor containing the GELU values of each element in the input tensor
+            Tensor with ceiling values
         """
-        return self.eltwise_proxy(torch.gelu, ttir.GeluOp, [in0], unit_attrs)
+        return self.eltwise_proxy(torch.ceil, ttir.CeilOp, [in0], unit_attrs)
 
     def cos(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """
@@ -412,23 +371,14 @@ class TTIRBuilderOps:
         """
         return self.eltwise_proxy(torch.cos, ttir.CosOp, [in0], unit_attrs)
 
-    def log1p(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
-        """Elementwise natural logarithm of one plus input operation.
+    def floor(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.floor``.
 
-        The `log1p` operation computes the natural logarithm of one plus each element in the
-        input tensor. For each element x, it returns ln(1 + x). This operation is more
-        accurate than computing log(1 + x) directly for x values close to zero, and it is
-        defined for x > -1. For values less than or equal to -1, the behavior depends on
-        the implementation (may return NaN or negative infinity).
+        *Elementwise floor operation.*
 
-        .. code-block:: mlir
-
-            // Compute log1p of all elements
-            %result = ttir.log1p(%input, %output) : tensor<4xf32>, tensor<4xf32> -> tensor<4xf32>
-            // Input tensor:
-            // [0.0, -0.999, 7.0, 6.38905621, 15.0]
-            // Output tensor:
-            // [0.0, -6.90776825, 2.07944155, 2.0, 2.77258873]
+        Computes the floor of each element in the input tensor, rounding down to the nearest integer.
+        This operation is idempotent.
 
         Parameters
         ----------
@@ -440,9 +390,46 @@ class TTIRBuilderOps:
         Returns
         -------
         *OpView*
-            A tensor containing the log1p values of the input tensor
+            Tensor with floor values
         """
-        return self.eltwise_proxy(torch.log1p, ttir.Log1pOp, [in0], unit_attrs)
+        return self.eltwise_proxy(torch.floor, ttir.FloorOp, [in0], unit_attrs)
+
+    def gelu(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.gelu``.
+
+        *Elementwise GELU operation.*
+
+        Computes the GELU (Gaussian Error Linear Unit) of each element in the input tensor.
+        GELU is a smooth, non-monotonic activation function that approximates the cumulative
+        distribution function of a standard normal distribution.
+
+        Mathematical definition: gelu(x) = 0.5 * x * (1 + erf(x / sqrt(2)))
+
+        .. code-block:: mlir
+
+            // Compute GELU of all elements
+            %result = ttir.gelu(%input, %output) : tensor<4xf32>, tensor<4xf32> -> tensor<4xf32>
+            // Input tensor:
+            // [1.0, -0.5, 2.0, -2.0]
+            // Output tensor:
+            // [0.841, -0.154, 1.954, -0.046]
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            A tensor containing the GELU values of each element in the input tensor
+        """
+        return self.eltwise_proxy(
+            torch.nn.functional.gelu, ttir.GeluOp, [in0], unit_attrs
+        )
 
     def is_finite(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """
@@ -477,6 +464,498 @@ class TTIRBuilderOps:
         """
         return self.eltwise_proxy(torch.isfinite, ttir.IsFiniteOp, [in0], unit_attrs)
 
+    def logical_not(
+        self, in0: Operand, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.logical_not``.
+
+        *Elementwise logical NOT operation.*
+
+        Computes the logical NOT of each element in the input tensor.
+        For each element x, returns True if x is False, and False if x is True.
+
+        .. code-block:: mlir
+
+            // Compute logical NOT of all elements
+            %result = ttir.logical_not(%input, %output) : tensor<3xi1>, tensor<3xi1> -> tensor<3xi1>
+            // Input tensor:
+            // [true, false, true]
+            // Output tensor:
+            // [false, true, false]
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            A tensor containing the logical NOT of each element in the input tensor
+        """
+        golden = self._get_golden_tensor(in0)
+        golden_output = torch.empty(golden.shape, dtype=golden.dtype)
+        return self.op_proxy(
+            torch.logical_not,
+            ttir.LogicalNotOp,
+            [in0],
+            golden_kwargs={"out": golden_output},
+            unit_attrs=unit_attrs,
+        )
+
+    @autodoc_skip
+    def bitwise_not(
+        self, in0: Operand, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.bitwise_not``.
+
+        *Elementwise bitwise NOT operation.*
+
+        Computes the bitwise NOT (one's complement) of each element in the input tensor.
+        For each element, flips all the bits in the binary representation of the value.
+
+        This operation is typically used with integer data types and has the involution property,
+        meaning that applying it twice returns the original value: bitwise_not(bitwise_not(x)) = x.
+
+        .. code-block:: mlir
+
+            // Bitwise NOT with integer tensors
+            %result = ttir.bitwise_not(%input, %output) : tensor<2x2xi32>, tensor<2x2xi32> -> tensor<2x2xi32>
+            // Input tensor:
+            // [[1, 2],
+            //  [3, 4]]
+            // Output tensor:
+            // [[-2, -3],
+            //  [-4, -5]]
+
+            // Example with 8-bit integers
+            %result = ttir.bitwise_not(%input, %output) : tensor<3xi8>, tensor<3xi8> -> tensor<3xi8>
+            // Input: [0, 5, 255] (binary: [00000000, 00000101, 11111111])
+            // Output: [255, 250, 0] (binary: [11111111, 11111010, 00000000])
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+        """
+        return self.eltwise_proxy(
+            torch.bitwise_not, ttir.BitwiseNotOp, [in0], unit_attrs
+        )
+
+    def neg(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.neg``.
+
+        *Elementwise negate operation.*
+
+        Computes the negation of each element in the input tensor.
+        For each element, returns the negation of the value.
+
+        Mathematical definition: neg(x) = -x
+
+        .. code-block:: mlir
+
+            // Compute negation of all elements
+            %result = ttir.neg(%input, %output) : tensor<4xf32>, tensor<4xf32> -> tensor<4xf32>
+            // Input tensor:
+            // [1.7, 2.0, -0.3, 4.5]
+            // Output tensor:
+            // [-1.7, -2.0, 0.3, -4.5]
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            A tensor containing the negation of each input element
+        """
+        return self.eltwise_proxy(torch.neg, ttir.NegOp, [in0], unit_attrs)
+
+    def tan(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.tan``.
+
+        *Elementwise tangent operation.*
+
+        Computes the tangent of each element in the input tensor.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with tangent values
+        """
+        return self.eltwise_proxy(torch.tan, ttir.TanOp, [in0], unit_attrs)
+
+    def atan(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.atan``.
+
+        *Elementwise arctangent operation.*
+
+        Computes the inverse tangent (arctangent) of each element in the input tensor.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with arctangent values
+        """
+        return self.eltwise_proxy(torch.atan, ttir.AtanOp, [in0], unit_attrs)
+
+    def tanh(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.tanh``.
+
+        *Elementwise hyperbolic tangent operation.*
+
+        Computes the hyperbolic tangent of each element in the input tensor.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with hyperbolic tangent values
+        """
+        return self.eltwise_proxy(torch.tanh, ttir.TanhOp, [in0], unit_attrs)
+
+    def reciprocal(
+        self, in0: Operand, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.reciprocal``.
+
+        *Elementwise reciprocal operation.*
+
+        Computes the reciprocal (1/x) of each element in the input tensor.
+        This operation is involutive (applying it twice returns to the original value).
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with reciprocal values
+        """
+        return self.eltwise_proxy(
+            torch.reciprocal, ttir.ReciprocalOp, [in0], unit_attrs
+        )
+
+    def relu(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.relu``.
+
+        *Elementwise ReLU activation operation.*
+
+        Computes the Rectified Linear Unit function for each element in the input tensor.
+        This operation is idempotent (applying it multiple times has the same effect as applying it once).
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with ReLU activation values
+        """
+        return self.eltwise_proxy(torch.relu, ttir.ReluOp, [in0], unit_attrs)
+
+    def rsqrt(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.rsqrt``.
+
+        *Elementwise reciprocal square root operation.*
+
+        Computes the reciprocal of the square root (1/√x) of each element in the input tensor.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with reciprocal square root values
+        """
+        return self.eltwise_proxy(torch.rsqrt, ttir.RsqrtOp, [in0], unit_attrs)
+
+    def sigmoid(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.sigmoid``.
+
+        *Elementwise sigmoid activation operation.*
+
+        Computes the sigmoid function (1/(1 + e^-x)) for each element in the input tensor.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with sigmoid activation values
+        """
+        return self.eltwise_proxy(torch.sigmoid, ttir.SigmoidOp, [in0], unit_attrs)
+
+    def sign(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.sign``.
+
+        *Elementwise sign operation.*
+
+        Returns the sign (-1, 0, or 1) of each element in the input tensor.
+        This operation is idempotent.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with sign values
+        """
+        return self.eltwise_proxy(torch.sign, ttir.SignOp, [in0], unit_attrs)
+
+    def sin(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.sin``.
+
+        *Elementwise sine operation.*
+
+        Computes the sine of each element in the input tensor.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with sine values
+        """
+        return self.eltwise_proxy(torch.sin, ttir.SinOp, [in0], unit_attrs)
+
+    def sqrt(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.sqrt``.
+
+        *Elementwise square root operation.*
+
+        Computes the square root of each element in the input tensor.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with square root values
+        """
+        return self.eltwise_proxy(torch.sqrt, ttir.SqrtOp, [in0], unit_attrs)
+
+    def typecast(
+        self, in0: Operand, out: Operand, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.typecast``.
+
+        *Elementwise type casting operation.*
+
+        Casts each element in the input tensor to the type of the output tensor.
+        The output type can be any supported tensor element type.
+
+        .. code-block:: mlir
+
+            // Cast float32 to int32
+            %result = ttir.typecast(%input, %output) : tensor<2x2xf32>, tensor<2x2xi32> -> tensor<2x2xi32>
+            // Input tensor:
+            // [[1.7, 2.3],
+            //  [3.8, 4.1]]
+            // Output tensor:
+            // [[1, 2],
+            //  [3, 4]]
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor to cast
+        out : Operand
+            Output tensor with desired type
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            A tensor containing the input values cast to the output type
+        """
+        output_type = self.get_type_from_torch_dtype(self._get_golden_tensor(out).dtype)
+        return self.op_proxy(
+            torch.Tensor.type,
+            ttir.TypecastOp,
+            [in0],
+            golden_kwargs={"dtype": self._get_golden_tensor(out).type()},
+            output_type=output_type,
+            unit_attrs=unit_attrs,
+        )
+
+    def log(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.log``.
+
+        *Elementwise natural logarithm operation.*
+
+        Computes the natural logarithm of each element in the input tensor.
+        For each element x, returns ln(x), where ln is the natural logarithm.
+
+        .. code-block:: mlir
+
+            // Compute natural logarithm of all elements
+            %result = ttir.log(%input, %output) : tensor<3xf32>, tensor<3xf32> -> tensor<3xf32>
+            // Input tensor:
+            // [1.0, 2.71828, 7.38906]
+            // Output tensor:
+            // [0.0, 1.0, 2.0]
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            A tensor containing the natural logarithm of each element in the input tensor
+        """
+        return self.eltwise_proxy(torch.log, ttir.LogOp, [in0], unit_attrs)
+
+    def log1p(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """Elementwise natural logarithm of one plus input operation.
+
+        The `log1p` operation computes the natural logarithm of one plus each element in the
+        input tensor. For each element x, it returns ln(1 + x). This operation is more
+        accurate than computing log(1 + x) directly for x values close to zero, and it is
+        defined for x > -1. For values less than or equal to -1, the behavior depends on
+        the implementation (may return NaN or negative infinity).
+
+        .. code-block:: mlir
+
+            // Compute log1p of all elements
+            %result = ttir.log1p(%input, %output) : tensor<4xf32>, tensor<4xf32> -> tensor<4xf32>
+            // Input tensor:
+            // [0.0, -0.999, 7.0, 6.38905621, 15.0]
+            // Output tensor:
+            // [0.0, -6.90776825, 2.07944155, 2.0, 2.77258873]
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            A tensor containing the log1p values of the input tensor
+        """
+        return self.eltwise_proxy(torch.log1p, ttir.Log1pOp, [in0], unit_attrs)
+
+    def expm1(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.expm1``.
+
+        *Elementwise exponential minus one operation.*
+
+        Computes e^x - 1 for each element in the input tensor, where e is Euler's number.
+        This operation provides better numerical precision than computing exp(x) - 1 directly,
+        especially for small values of x.
+
+        .. code-block:: mlir
+
+            // Compute exp(x) - 1 for all elements
+            %result = ttir.expm1(%input, %output) : tensor<3xf32>, tensor<3xf32> -> tensor<3xf32>
+            // Input tensor:
+            // [0.0, 0.1, -0.1]
+            // Output tensor:
+            // [0.0, 0.10517, -0.09516]
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            A tensor containing exp(x) - 1 for each element x in the input tensor
+        """
+        return self.eltwise_proxy(torch.expm1, ttir.Expm1Op, [in0], unit_attrs)
+
     # class TTIR_ElementwiseUnaryWithFloatParameterOp
 
     def leaky_relu(
@@ -485,54 +964,41 @@ class TTIRBuilderOps:
         parameter: float = 0.01,
         unit_attrs: Optional[List[str]] = None,
     ) -> OpView:
-        """Elementwise leaky ReLU operation.
+        """
+        Creates ``ttir.leaky_relu``.
 
         *Elementwise leaky ReLU activation operation.*
 
-        Computes an element-wise activation function over its input tensor.
-        For each element x, computes:
-        - y = x if x > 0
-        - y = parameter * x if x <= 0
+        Computes a leaky version of the Rectified Linear Unit (ReLU) activation function.
+        For each element x in the input tensor:
+        - If x > 0: returns x
+        - If x ≤ 0: returns parameter * x
 
-        The parameter is a small, user-defined constant that determines the slope for
-        negative inputs.
+        The parameter controls the slope for negative values, allowing a small gradient
+        when the unit is not active.
 
         .. code-block:: mlir
 
-            // Compute Leaky ReLU with default parameter (0.01)
-            %result = ttir.leaky_relu(%input) {
-              parameter = 0.01
-            } : tensor<2x2xf32> -> tensor<2x2xf32>
+            // Compute leaky ReLU with slope 0.01 for negative values
+            %result = ttir.leaky_relu(%input, %output) : tensor<4xf32>, tensor<4xf32> -> tensor<4xf32>
             // Input tensor:
-            // [[1.0, -2.0],
-            //  [3.0, -4.0]]
+            // [2.0, -1.0, 0.0, -3.0]
             // Output tensor:
-            // [[1.0, -0.02],
-            //  [3.0, -0.04]]
-
-            // With custom parameter
-            %result = ttir.leaky_relu(%input) {
-              parameter = 0.1
-            } : tensor<2x2xf32> -> tensor<2x2xf32>
-            // Input tensor:
-            // [[1.0, -2.0],
-            //  [3.0, -4.0]]
-            // Output tensor:
-            // [[1.0, -0.2],
-            //  [3.0, -0.4]]
+            // [2.0, -0.01, 0.0, -0.03]
 
         Parameters
         ----------
         in0 : Operand
             Input tensor to be activated
         parameter : float, optional
-            The slope for negative values (default: 0.01)
+            Slope for negative values (default: 0.01)
         unit_attrs : Optional[List[str]], optional
             Optional list of unit attributes
 
         Returns
         -------
         *OpView*
+            A tensor containing the leaky ReLU activation values
         """
         # TODO: reconcile this naming mismatch
         ttir_kwargs = {"parameter": parameter}
@@ -547,56 +1013,6 @@ class TTIRBuilderOps:
         )
 
     # class TTIR_ElementwiseBinaryOp
-
-    def div(
-        self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
-    ) -> OpView:
-        """
-        Creates ``ttir.div``.
-
-        *Elementwise division operation.*
-
-        Performs elementwise division between two tensors.
-        For each pair of corresponding elements, divides the element in the first
-        tensor by the element in the second tensor.
-
-        Note: Division by zero behavior depends on the implementation and data type.
-
-        Mathematical definition: div(x, y) = x / y
-
-        .. code-block:: mlir
-
-            // Divide corresponding elements
-            %result = ttir.div(%lhs, %rhs, %output) : tensor<3xf32>, tensor<3xf32>, tensor<3xf32> -> tensor<3xf32>
-            // Input tensors:
-            // lhs: [3.5, 0.0, -1.2]
-            // rhs: [1.5, 2.0, -3.2]
-            // Output tensor:
-            // [2.333, 0.0, 0.375]
-
-        Parameters
-        ----------
-        in0 : Operand
-            First input tensor (dividend)
-        in1 : Operand
-            Second input tensor (divisor)
-        unit_attrs : Optional[List[str]], optional
-            Optional list of unit attributes
-
-        Returns
-        -------
-        *OpView*
-            A tensor containing the elementwise quotient of the inputs
-        """
-        golden = self._get_golden_tensor(in0)
-        golden_output = torch.empty(golden.shape, dtype=golden.dtype)
-        return self.op_proxy(
-            torch.div,
-            ttir.DivOp,
-            [in0, in1],
-            golden_kwargs={"out": golden_output},
-            unit_attrs=unit_attrs,
-        )
 
     def eq(
         self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
@@ -1035,7 +1451,6 @@ class TTIRBuilderOps:
             unit_attrs=unit_attrs,
         )
 
-    @autodoc_skip
     def bitwise_and(
         self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
     ) -> OpView:
@@ -1080,7 +1495,6 @@ class TTIRBuilderOps:
             torch.bitwise_and, ttir.BitwiseAndOp, [in0, in1], unit_attrs=unit_attrs
         )
 
-    @autodoc_skip
     def bitwise_or(
         self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
     ) -> OpView:
@@ -1125,88 +1539,2119 @@ class TTIRBuilderOps:
             torch.bitwise_or, ttir.BitwiseOrOp, [in0, in1], unit_attrs=unit_attrs
         )
 
-    @autodoc_skip
-    def bitwise_not(
-        self, in0: Operand, unit_attrs: Optional[List[str]] = None
+    def bitwise_xor(
+        self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
     ) -> OpView:
         """
-        Creates ``ttir.bitwise_not``.
+        Creates ``ttir.bitwise_xor``.
 
-        *Elementwise bitwise NOT operation.*
+        *Elementwise bitwise XOR operation.*
 
-        Computes the bitwise NOT (one's complement) of each element in the input tensor.
-        For each element, flips all the bits in the binary representation of the value.
-
-        This operation is typically used with integer data types and has the involution property,
-        meaning that applying it twice returns the original value: bitwise_not(bitwise_not(x)) = x.
+        Performs elementwise bitwise XOR (exclusive OR) operation between two tensors.
+        For each pair of corresponding elements, performs a bitwise XOR on their binary representations.
 
         .. code-block:: mlir
 
-            // Bitwise NOT with integer tensors
-            %result = ttir.bitwise_not(%input, %output) : tensor<2x2xi32>, tensor<2x2xi32> -> tensor<2x2xi32>
-            // Input tensor:
-            // [[1, 2],
-            //  [3, 4]]
+            // Bitwise XOR with integer tensors
+            %result = ttir.bitwise_xor(%input1, %input2, %output) : tensor<2x2xi32>, tensor<2x2xi32> -> tensor<2x2xi32>
+            // Input1 tensor:
+            // [[1, 3],  // binary: [[0001, 0011],
+            //  [5, 7]]  //         [0101, 0111]]
+            // Input2 tensor:
+            // [[2, 3],  // binary: [[0010, 0011],
+            //  [6, 7]]  //         [0110, 0111]]
             // Output tensor:
-            // [[-2, -3],
-            //  [-4, -5]]
-
-            // Example with 8-bit integers
-            %result = ttir.bitwise_not(%input, %output) : tensor<3xi8>, tensor<3xi8> -> tensor<3xi8>
-            // Input: [0, 5, 255] (binary: [00000000, 00000101, 11111111])
-            // Output: [255, 250, 0] (binary: [11111111, 11111010, 00000000])
+            // [[3, 0],  // binary: [[0011, 0000],
+            //  [3, 0]]  //         [0011, 0000]]
 
         Parameters
         ----------
         in0 : Operand
-            Input tensor
+            First input tensor
+        in1 : Operand
+            Second input tensor
         unit_attrs : Optional[List[str]], optional
             Optional list of unit attributes
 
         Returns
         -------
         *OpView*
+            A tensor containing the bitwise XOR of corresponding elements
         """
         return self.eltwise_proxy(
-            torch.bitwise_not, ttir.BitwiseNotOp, [in0], unit_attrs=unit_attrs
+            torch.bitwise_xor, ttir.BitwiseXorOp, [in0, in1], unit_attrs=unit_attrs
+        )
+
+    def minimum(
+        self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.minimum``.
+
+        *Elementwise minimum operation.*
+
+        Returns the element-wise minimum of two tensors.
+        This operation is idempotent and partially broadcastable.
+
+        Parameters
+        ----------
+        in0 : Operand
+            First input tensor
+        in1 : Operand
+            Second input tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with minimum values
+        """
+        return self.eltwise_proxy(
+            torch.minimum, ttir.MinimumOp, [in0, in1], unit_attrs=unit_attrs
+        )
+
+    def subtract(
+        self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.subtract``.
+
+        *Elementwise subtraction operation.*
+
+        Performs elementwise subtraction between two tensors.
+        For each pair of corresponding elements, subtracts the element in the second
+        tensor from the element in the first tensor.
+
+        Mathematical definition: subtract(x, y) = x - y
+
+        .. code-block:: mlir
+
+            // Subtract corresponding elements
+            %result = ttir.subtract(%lhs, %rhs, %output) : tensor<3xf32>, tensor<3xf32>, tensor<3xf32> -> tensor<3xf32>
+            // Input tensors:
+            // lhs: [3.5, 0.0, -1.2]
+            // rhs: [1.5, 2.0, -3.2]
+            // Output tensor:
+            // [2.0, -2.0, 2.0]
+
+        Parameters
+        ----------
+        in0 : Operand
+            First input tensor (minuend)
+        in1 : Operand
+            Second input tensor (subtrahend)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            A tensor containing the elementwise difference of the inputs
+        """
+        return self.eltwise_proxy(
+            torch.subtract, ttir.SubtractOp, [in0, in1], unit_attrs=unit_attrs
+        )
+
+    def remainder(
+        self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.remainder``.
+
+        *Elementwise remainder operation.*
+
+        Computes the element-wise remainder of division (modulo operation).
+
+        Parameters
+        ----------
+        in0 : Operand
+            First input tensor (dividend)
+        in1 : Operand
+            Second input tensor (divisor)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with remainder values
+        """
+        return self.eltwise_proxy(
+            torch.remainder, ttir.RemainderOp, [in0, in1], unit_attrs=unit_attrs
+        )
+
+    def pow(
+        self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.pow``.
+
+        *Elementwise power operation.*
+
+        Takes the first tensor to the power of the second tensor element-wise.
+
+        Parameters
+        ----------
+        in0 : Operand
+            First input tensor (base)
+        in1 : Operand
+            Second input tensor (exponent)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with power values
+        """
+        return self.eltwise_proxy(
+            torch.pow, ttir.PowOp, [in0, in1], unit_attrs=unit_attrs
+        )
+
+    # class TTIR_ReductionOp
+
+    def argmax(
+        self,
+        in0: Operand,
+        dim_arg: List[int],
+        keep_dim: bool = False,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.argmax``.
+
+        *Argmax reduction operation.*
+
+        Returns the indices of the maximum values along the specified dimensions.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim_arg : List[int]
+            Dimensions to reduce over
+        keep_dim : bool, optional
+            If True, retains reduced dimensions with length 1 (default: False)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor containing the indices of maximum values
+        """
+        kwargs = {"dim_arg": dim_arg, "keep_dim": keep_dim}
+        return self.op_proxy(
+            self.argmax_golden_function,
+            ttir.ArgMaxOp,
+            [in0],
+            golden_kwargs=kwargs,
+            ttir_kwargs=kwargs,
+            output_type=IntegerType.get_signless(32, self._ctx),
+            unit_attrs=unit_attrs,
+        )
+
+    @autodoc_skip
+    def argmax_golden_function(
+        self, in0: Operand, dim_arg: List[int], keep_dim: bool = False
+    ) -> OpView:
+        in1 = torch.argmax(in0, dim=dim_arg[0], keepdim=keep_dim)
+        return in1.to(torch.int32)
+
+    def sum(
+        self,
+        in0: Operand,
+        dim_arg: List[int] = [0],
+        keep_dim: bool = True,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.sum``.
+
+        *Sum reduction operation.*
+
+        The `sum` operation computes the sum of elements along specified dimensions of the input tensor.
+        If `dim_arg` is not provided, the sum is computed over all dimensions. If `keep_dim` is True,
+        the reduced dimensions are retained with a size of 1.
+
+        Example:
+        ```mlir
+        // Sum along dimension 1
+        %input = ... : tensor<2x3xf32>
+        %output = ttir.empty() : tensor<2xf32>
+        %result = ttir.sum(%input, %output) {keep_dim = false, dim_arg = [1: i32]} : tensor<2x3xf32>, tensor<2xf32> -> tensor<2xf32>
+        // Input: [[1.0, 2.0, 3.0],
+        //         [4.0, 5.0, 6.0]]
+        // Output: [6.0, 15.0]  // Sum of each row
+        ```
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim_arg : List[int], optional
+            Dimensions to reduce over (default: [0])
+        keep_dim : bool, optional
+            If True, retains reduced dimensions with length 1 (default: True)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with summed values
+        """
+        return self.op_proxy(
+            torch.sum,
+            ttir.SumOp,
+            [in0],
+            golden_kwargs={"dim": dim_arg, "keepdim": keep_dim},
+            ttir_kwargs={"dim_arg": dim_arg, "keep_dim": keep_dim},
+            unit_attrs=unit_attrs,
+        )
+
+    def mean(
+        self,
+        in0: Operand,
+        dim_arg: List[int] = [0],
+        keep_dim: bool = True,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.mean``.
+
+        *Mean reduction operation.*
+
+        Computes the mean of elements along specified dimensions of the input tensor.
+        If `dim_arg` is not provided, the mean is computed over all dimensions.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim_arg : List[int], optional
+            Dimensions to reduce over (default: [0])
+        keep_dim : bool, optional
+            If True, retains reduced dimensions with length 1 (default: True)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with mean values
+        """
+        return self.op_proxy(
+            torch.mean,
+            ttir.MeanOp,
+            [in0],
+            golden_kwargs={"dim": dim_arg, "keepdim": keep_dim},
+            ttir_kwargs={"dim_arg": dim_arg, "keep_dim": keep_dim},
+            unit_attrs=unit_attrs,
+        )
+
+    def max(
+        self,
+        in0: Operand,
+        dim_arg: int = None,
+        keep_dim: bool = True,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.max``.
+
+        *Maximum reduction operation.*
+
+        Returns the maximum values along the specified dimension.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim_arg : int, optional
+            Dimension to reduce over (default: None, reduces over all dimensions)
+        keep_dim : bool, optional
+            If True, retains reduced dimensions with length 1 (default: True)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with maximum values
+        """
+        # Handle ttir and golden function arguments for edge cases
+        golden_kwargs = {}
+        ttir_kwargs = {"keep_dim": keep_dim}
+        output_shape = [1] * len(self.get_shape(in0))
+        if dim_arg:
+            golden_kwargs = {"dim": dim_arg, "keepdim": keep_dim}
+            ttir_kwargs["dim_arg"] = [dim_arg]
+        if not keep_dim:
+            output_shape = torch.Size([1])
+
+        return self.op_proxy(
+            torch.max,
+            ttir.MaxOp,
+            [in0],
+            golden_kwargs=golden_kwargs,
+            ttir_kwargs=ttir_kwargs,
+            output_shape=output_shape,
+            unit_attrs=unit_attrs,
+        )
+
+    def min(
+        self,
+        in0: Operand,
+        dim_arg: int = None,
+        keep_dim: bool = True,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.min``.
+
+        *Minimum reduction operation.*
+
+        Returns the minimum values along the specified dimension.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim_arg : int, optional
+            Dimension to reduce over (default: None, reduces over all dimensions)
+        keep_dim : bool, optional
+            If True, retains reduced dimensions with length 1 (default: True)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with minimum values
+        """
+        # Handle ttir and golden function arguments for edge cases
+        golden_kwargs = {}
+        ttir_kwargs = {"keep_dim": keep_dim}
+        output_shape = [1] * len(self.get_shape(in0))
+        if dim_arg:
+            golden_kwargs = {"dim": dim_arg, "keepdim": keep_dim}
+            ttir_kwargs["dim_arg"] = [dim_arg]
+        if not keep_dim:
+            output_shape = torch.Size([1])
+
+        return self.op_proxy(
+            torch.min,
+            ttir.MinOp,
+            [in0],
+            golden_kwargs=golden_kwargs,
+            ttir_kwargs=ttir_kwargs,
+            output_shape=output_shape,
+            unit_attrs=unit_attrs,
+        )
+
+    # NOTE: Not useable. Boolean tensors are not supported by the runtime. Issue #1775
+    @autodoc_skip
+    def reduce_and(
+        self,
+        in0: Operand,
+        keep_dim: bool = True,
+        dim_args: Optional[List] = None,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.reduce_and``.
+
+        *Logical AND reduction operation.*
+
+        Computes the logical AND of elements along specified dimensions.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        keep_dim : bool, optional
+            If True, retains reduced dimensions with length 1 (default: True)
+        dim_args : Optional[List], optional
+            Dimensions to reduce over (default: None, reduces over all dimensions)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with logical AND values
+        """
+        return self.op_proxy(
+            torch.all,
+            ttir.ReduceAndOp,
+            [in0],
+            golden_kwargs={"dim": tuple(dim_args), "keepdim": keep_dim},
+            ttir_kwargs={"dim_arg": dim_args, "keep_dim": keep_dim},
+            unit_attrs=unit_attrs,
+        )
+
+    # NOTE: Not useable. Boolean tensors are not supported by the runtime. Issue #1775
+    @autodoc_skip
+    def reduce_or(
+        self,
+        in0: Operand,
+        keep_dim: bool = True,
+        dim_args: Optional[List] = None,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.reduce_or``.
+
+        *Logical OR reduction operation.*
+
+        Computes the logical OR of elements along specified dimensions.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        keep_dim : bool, optional
+            If True, retains reduced dimensions with length 1 (default: True)
+        dim_args : Optional[List], optional
+            Dimensions to reduce over (default: None, reduces over all dimensions)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with logical OR values
+        """
+        return self.op_proxy(
+            torch.any,
+            ttir.ReduceOrOp,
+            [in0],
+            golden_kwargs={"dim": tuple(dim_args)},
+            ttir_kwargs={"dim_arg": dim_args, "keep_dim": keep_dim},
+            unit_attrs=unit_attrs,
+        )
+
+    def prod(
+        self,
+        in0: Operand,
+        dim_arg: List[int],
+        keep_dim: bool = False,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.prod``.
+
+        *Product reduction operation.*
+
+        Computes the product of elements along specified dimensions.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim_arg : List[int]
+            Dimensions to reduce over
+        keep_dim : bool, optional
+            If True, retains reduced dimensions with length 1 (default: False)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with product values
+        """
+        golden_kwargs = {}
+        if len(dim_arg) == 1:
+            golden_kwargs["dim"] = dim_arg[0]
+            golden_kwargs["keepdim"] = keep_dim
+            golden_function = torch.prod
+        else:
+            golden_function = lambda i: torch.tensor([torch.prod(i[0]).item()])
+        return self.op_proxy(
+            golden_function,
+            ttir.ProdOp,
+            [in0],
+            golden_kwargs=golden_kwargs,
+            ttir_kwargs={"keep_dim": keep_dim, "dim_arg": dim_arg},
+            unit_attrs=unit_attrs,
+        )
+
+    def embedding(
+        self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.embedding``.
+
+        *Embedding lookup operation.*
+
+        Performs a lookup in an embedding table (in1) using indices (in0).
+        Returns a tensor containing the embeddings for the given indices.
+
+        .. code-block:: mlir
+
+            // Lookup embeddings for indices
+            %result = ttir.embedding(%indices, %weights, %output) : tensor<2xi32>, tensor<4x3xf32> -> tensor<2x3xf32>
+            // Indices tensor:
+            // [1, 3]  // Looking up embeddings at indices 1 and 3
+            // Weights tensor (embedding table):
+            // [[0.1, 0.2, 0.3],  // embedding 0
+            //  [0.4, 0.5, 0.6],  // embedding 1
+            //  [0.7, 0.8, 0.9],  // embedding 2
+            //  [1.0, 1.1, 1.2]]  // embedding 3
+            // Output tensor:
+            // [[0.4, 0.5, 0.6],  // embedding for index 1
+            //  [1.0, 1.1, 1.2]]  // embedding for index 3
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor containing indices
+        in1 : Operand
+            Weight tensor containing embeddings
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            A tensor containing the embeddings for the input indices
+        """
+        embedding = torch.nn.Embedding.from_pretrained(self._get_golden_tensor(in1))
+        golden_typecast = self._get_golden_tensor(in0).to(torch.int32)
+        golden_input = torch.clamp(
+            golden_typecast, 0, (self._get_golden_tensor(in1).size()[0] - 1)
+        )
+        return self.op_proxy(
+            embedding,
+            ttir.EmbeddingOp,
+            [in0, in1],
+            organize_golden_args=lambda i: (golden_input,),
+            unit_attrs=unit_attrs,
+        )
+
+    def cumsum(
+        self,
+        in0: Operand,
+        in1: Operand,
+        dim: int,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.cumsum``.
+
+        *Cumulative sum operation.*
+
+        Computes the cumulative sum of elements along a specified dimension.
+        For each element at index i in the dimension, computes the sum of all elements
+        with indices ≤ i in that dimension.
+
+        .. code-block:: mlir
+
+            // Compute cumulative sum along dimension 1
+            %result = ttir.cumsum(%input, %output, dim = 1) : tensor<2x3xf32>, tensor<2x3xf32> -> tensor<2x3xf32>
+            // Input tensor:
+            // [[1.0, 2.0, 3.0],
+            //  [4.0, 5.0, 6.0]]
+            // Output tensor:
+            // [[1.0, 3.0, 6.0],
+            //  [4.0, 9.0, 15.0]]
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        in1 : Operand
+            Output tensor
+        dim : int
+            Dimension along which to compute cumulative sum
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            A tensor containing the cumulative sums along the specified dimension
+        """
+        return self.op_proxy(
+            torch.cumsum,
+            ttir.CumSumOp,
+            [in0, in1],
+            golden_kwargs={"dim": dim},
+            ttir_kwargs={"dim": dim, "output": in1},
+            organize_ttir_args=lambda i, o, _: (self._get_type(o), i[0]),
+            organize_golden_args=lambda i: [self._get_golden_tensor(i[0])],
+            unit_attrs=unit_attrs,
+        )
+
+    def softmax(
+        self, in0: Operand, dimension: int = 1, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.softmax``.
+
+        *Softmax operation.*
+
+        Applies the Softmax function to an n-dimensional input tensor rescaling them
+        so that the elements lie in the range [0,1] and sum to 1.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim : int, optional
+            Dimension along which Softmax will be computed (default: -1)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Output tensor after softmax
+        """
+        return self.op_proxy(
+            torch.nn.functional.softmax,
+            ttir.SoftmaxOp,
+            [in0],
+            golden_kwargs={"dim": dimension},
+            organize_ttir_args=lambda i, o, _: (
+                self._get_type(o),
+                i[0],
+                o,
+                dimension,
+            ),
+            unit_attrs=unit_attrs,
+        )
+
+    def transpose(
+        self,
+        in0: Operand,
+        dim0: int = 0,
+        dim1: int = 1,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.transpose``.
+
+        *Tensor transpose operation.*
+
+        Swaps two dimensions of a tensor.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim0 : int, optional
+            First dimension to swap (default: 0)
+        dim1 : int, optional
+            Second dimension to swap (default: 1)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with swapped dimensions
+        """
+        kwargs = {"dim0": dim0, "dim1": dim1}
+        return self.op_proxy(
+            torch.transpose,
+            ttir.TransposeOp,
+            [in0],
+            golden_kwargs=kwargs,
+            ttir_kwargs=kwargs,
+            unit_attrs=unit_attrs,
+        )
+
+    def concat(
+        self, ins: List[Operand], dim: int = 0, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.concat``.
+
+        *Tensor concatenation operation.*
+
+        Concatenates the given sequence of tensors in the given dimension.
+        All tensors must have the same shape, except in the concatenating dimension.
+
+        Parameters
+        ----------
+        ins : List[Operand]
+            List of input tensors to concatenate
+        dim : int, optional
+            Dimension along which to concatenate (default: 0)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Concatenated tensor
+        """
+        kwargs = {"dim": dim}
+        return self.op_proxy(
+            torch.concat,
+            ttir.ConcatOp,
+            ins,
+            golden_kwargs=kwargs,
+            ttir_kwargs=kwargs,
+            # special handling is needed here to get around arg expansion; `torch.concat` takes a tuple of tensors on input
+            organize_golden_args=lambda i: (
+                tuple([self._get_golden_tensor(i_i) for i_i in i]),
+            ),
+            organize_ttir_args=lambda i, o, _: (self._get_type(o), i, o),
+            unit_attrs=unit_attrs,
+        )
+
+    def repeat(
+        self, in0: Operand, dims: List[int], unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.repeat``.
+
+        *Tensor repeat operation.*
+
+        Repeats the tensor along each dimension the number of times given by dims.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dims : List[int]
+            Number of repetitions for each dimension
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with repeated elements
+        """
+        return self.op_proxy(
+            torch.Tensor.repeat,
+            ttir.RepeatOp,
+            [in0],
+            golden_kwargs={"repeats": dims},
+            ttir_kwargs={"repeat_dimensions": dims},
+            unit_attrs=unit_attrs,
+        )
+
+    def repeat_interleave(
+        self,
+        in0: Operand,
+        in1: Operand,
+        repeats: int,
+        dim: int,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.repeat_interleave``.
+
+        *Tensor repeat interleave operation.*
+
+        Repeats elements of a tensor along a dimension by interleaving the repeated elements.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        repeats : int
+            Number of repetitions for each element
+        dim : int
+            Dimension along which to repeat
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with interleaved repeated elements
+        """
+        return self.op_proxy(
+            torch.repeat_interleave,
+            ttir.RepeatInterleaveOp,
+            [in0, in1],
+            golden_kwargs={"repeats": repeats, "dim": dim},
+            ttir_kwargs={"repeats": repeats, "dim": dim},
+            organize_ttir_args=lambda i, o, _: (self._get_type(o), i[0], i[1]),
+            organize_golden_args=lambda i: [self._get_golden_tensor(i[0])],
+            output_type=self.get_type_from_torch_dtype(
+                self._get_golden_tensor(in1).dtype
+            ),
+            unit_attrs=unit_attrs,
+        )
+
+    def fill_cache(
+        self,
+        in0: Operand,
+        in1: Operand,
+        batch_offset: int = 0,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.fill_cache``.
+
+        *Cache fill operation.*
+
+        Fills a cache tensor with new values starting at a specified batch offset.
+        This operation is typically used in sequence models to initialize or update
+        cached states.
+
+        .. code-block:: mlir
+
+            // Fill cache with new values at batch offset 1
+            %result = ttir.fill_cache(%new_values, %cache, batch_offset = 1) : tensor<2x3xf32>, tensor<4x3xf32> -> tensor<4x3xf32>
+            // New values tensor:
+            // [[1.0, 2.0, 3.0],
+            //  [4.0, 5.0, 6.0]]
+            // Cache tensor before:
+            // [[0.1, 0.2, 0.3],
+            //  [0.4, 0.5, 0.6],
+            //  [0.7, 0.8, 0.9],
+            //  [1.0, 1.1, 1.2]]
+            // Cache tensor after:
+            // [[0.1, 0.2, 0.3],
+            //  [1.0, 2.0, 3.0],
+            //  [4.0, 5.0, 6.0],
+            //  [1.0, 1.1, 1.2]]
+
+        Parameters
+        ----------
+        in0 : Operand
+            New values to fill into cache
+        in1 : Operand
+            Cache tensor to be filled
+        batch_offset : int, optional
+            Starting position in batch dimension (default: 0)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            The updated cache tensor
+        """
+        cache_tensor = self._get_golden_tensor(in0)
+        input_tensor = self._get_golden_tensor(in1)
+        cache_tensor[:, :, : input_tensor.shape[2], :] = input_tensor
+        return self.op_proxy(
+            torch.clone,
+            ttir.FillCacheOp,
+            [in0, in1],
+            golden_kwargs={"input": cache_tensor},
+            ttir_kwargs={"batch_offset": batch_offset},
+            organize_ttir_args=lambda i, o, _: (self._get_type(o), i[0], i[1]),
+            organize_golden_args=lambda i: 0,
+            unit_attrs=unit_attrs,
+        )
+
+    def update_cache(
+        self,
+        in0: Operand,
+        in1: Operand,
+        in2: Operand,
+        batch_offset: int = 0,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.update_cache``.
+
+        *Cache update operation.*
+
+        Updates a cache tensor by combining new values with existing cache values,
+        starting at a specified batch offset. This operation is typically used in
+        sequence models to maintain and update cached states.
+
+        .. code-block:: mlir
+
+            // Update cache with new values at batch offset 1
+            %result = ttir.update_cache(%new_values, %old_cache, %mask, batch_offset = 1) \
+                : tensor<2x3xf32>, tensor<4x3xf32>, tensor<2xi1> -> tensor<4x3xf32>
+            // New values tensor:
+            // [[1.0, 2.0, 3.0],
+            //  [4.0, 5.0, 6.0]]
+            // Old cache tensor:
+            // [[0.1, 0.2, 0.3],
+            //  [0.4, 0.5, 0.6],
+            //  [0.7, 0.8, 0.9],
+            //  [1.0, 1.1, 1.2]]
+            // Mask tensor:
+            // [true, false]  // Only update first new value
+            // Output tensor:
+            // [[0.1, 0.2, 0.3],
+            //  [1.0, 2.0, 3.0],  // Updated with first new value
+            //  [0.7, 0.8, 0.9],  // Kept old value due to mask
+            //  [1.0, 1.1, 1.2]]
+
+        Parameters
+        ----------
+        in0 : Operand
+            New values to update cache with
+        in1 : Operand
+            Cache tensor to be updated
+        in2 : Operand
+            Mask tensor indicating which values to update
+        batch_offset : int, optional
+            Starting position in batch dimension (default: 0)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            The updated cache tensor
+        """
+        cache = self._get_golden_tensor(in0)
+        input_tensor = self._get_golden_tensor(in1)
+        index = torch.clamp(self._get_golden_tensor(in2), 0, cache.size()[2])
+        a = cache[:, :, : index[0], :]
+        b = cache[:, :, : (cache.size()[2] - index[0] - 1), :]
+        return self.op_proxy(
+            torch.cat,
+            ttir.UpdateCacheOp,
+            [in0, in1, in2],
+            golden_kwargs={"tensors": (a, input_tensor, b), "dim": 2},
+            ttir_kwargs={"batch_offset": batch_offset},
+            organize_ttir_args=lambda i, o, _: (self._get_type(o), i[0], i[1], i[2]),
+            organize_golden_args=lambda i: 0,
+            unit_attrs=unit_attrs,
+        )
+
+    def broadcast(
+        self,
+        in0: Operand,
+        in1: Operand,
+        broadcast_dimensions: List[int],
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.broadcast``.
+
+        *Tensor broadcast operation.*
+
+        Broadcasts a tensor to a new shape by replicating its values along specified dimensions.
+        The broadcast_dimensions parameter specifies how dimensions of the input map to
+        dimensions of the output.
+
+        .. code-block:: mlir
+
+            // Broadcast a 1D tensor to 2D
+            %result = ttir.broadcast(%input, %output, broadcast_dimensions = [1]) : tensor<3xf32>, tensor<2x3xf32> -> tensor<2x3xf32>
+            // Input tensor:
+            // [1.0, 2.0, 3.0]
+            // Output tensor:
+            // [[1.0, 2.0, 3.0],
+            //  [1.0, 2.0, 3.0]]
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor to broadcast
+        in1 : Operand
+            Output tensor with target shape
+        broadcast_dimensions : List[int]
+            List of dimension mappings from input to output
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            The broadcasted tensor
+        """
+        return self.op_proxy(
+            torch.broadcast_to,
+            ttir.BroadcastOp,
+            [in0],
+            golden_kwargs={"size": self.get_shape(in1)},
+            ttir_kwargs={"broadcast_dimensions": broadcast_dimensions},
+            unit_attrs=unit_attrs,
+        )
+
+    def conv2d(
+        self,
+        in0: Operand,
+        weight: Operand,
+        bias: Optional[Operand],
+        in1: Operand,
+        stride: Union[int, List[int]],
+        padding: Union[int, List[int]],
+        dilation: Union[int, List[int]],
+        groups: int,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.conv2d``.
+
+        *Conv2d operation.*
+
+        Applies a 2D convolution over an input image composed of several input planes.
+        This operation performs a 2D convolution on the input tensor using the provided weight tensor
+        and optional bias. It supports configurable stride, padding, dilation, and grouping parameters.
+
+        Example:
+        ```mlir
+        // Basic 2D convolution
+        %input = ... : tensor<1x28x28x3xf32>    // Batch size 1, 28x28 image, 3 channels
+        %weight = ... : tensor<16x3x3x3xf32>    // 16 output channels, 3 input channels, 3x3 kernel
+        %bias = ... : tensor<1x1x1x16xf32>      // Bias for 16 output channels
+        %output = ttir.empty() : tensor<1x26x26x16xf32>  // Output shape with no padding
+        %result = ttir.conv2d(%input, %weight, %bias, %output) {
+            stride = [1, 1],
+            padding = [0, 0, 0, 0],
+            dilation = [1, 1],
+            groups = 1
+        }
+        ```
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor in (N, H_in, W_in, C) format
+        weight : Operand
+            Weight tensor in (O, C/G, K_H, K_W) format
+        bias : Optional[Operand]
+            Optional bias tensor in (1, 1, 1, O) format
+        output : Operand
+            Output tensor specification
+        stride : Union[int, List[int]], optional
+            Stride for height and width dimensions (default: 1)
+        padding : Union[int, List[int]], optional
+            Padding for all sides or [top, left, bottom, right] (default: 0)
+        dilation : Union[int, List[int]], optional
+            Spacing between kernel elements (default: 1)
+        groups : int, optional
+            Number of blocked connections from input to output channels (default: 1)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Output tensor after convolution
+        """
+        if not bias:
+            bias = None
+        return self.op_proxy(
+            self.conv2d_golden_function,
+            ttir.Conv2dOp,
+            [in0, weight, bias],
+            golden_kwargs={
+                "stride": stride,
+                "padding": padding,
+                "dilation": dilation,
+                "groups": groups,
+            },
+            ttir_kwargs={
+                "stride": (
+                    IntegerAttr.get(IntegerType.get_signed(32), stride)
+                    if isinstance(stride, int)
+                    else DenseI32ArrayAttr.get(stride)
+                ),
+                "padding": (
+                    IntegerAttr.get(IntegerType.get_signed(32), padding)
+                    if isinstance(padding, int)
+                    else DenseI32ArrayAttr.get(padding)
+                ),
+                "dilation": (
+                    IntegerAttr.get(IntegerType.get_signed(32), dilation)
+                    if isinstance(dilation, int)
+                    else DenseI32ArrayAttr.get(dilation)
+                ),
+                "groups": groups,
+            },
+            organize_ttir_args=lambda i, o, _: (self._get_type(o), i[0], i[1], o),
+            unit_attrs=unit_attrs,
+        )
+
+    @autodoc_skip
+    def conv2d_golden_function(
+        self,
+        input_tensor: Operand,
+        weight: Operand,
+        bias: Optional[Operand],
+        stride: Union[int, List[int]],
+        padding: Union[int, List[int]],
+        dilation: Union[int, List[int]],
+        groups: int,
+    ) -> Operand:
+        # Reorganize ttir_kwargs into golden_kwargs
+        stride = list(stride) if not isinstance(stride, int) else int(stride)
+        padding = list(padding) if not isinstance(padding, int) else int(padding)
+        dilation = list(dilation) if not isinstance(dilation, int) else int(dilation)
+
+        # ttir can handle a broadcastable bias in the shape [1, 1, 1, C_out], but PyTorch requires the bias is rank 1: [C_out]
+        bias = bias.squeeze()  # Removes all dims of size 1
+
+        # Reorganize input and output tensors, golden and ttir functions have different expected tensor shapes
+        input_tensor = input_tensor.transpose(-2, -1).transpose(-3, -2)
+        result = torch.nn.functional.conv2d(
+            input_tensor,
+            weight,
+            bias=bias,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+        )
+        result = result.transpose(-3, -2).transpose(-2, -1)
+        return result
+
+    def conv_transpose2d(
+        self,
+        in0: Operand,
+        weight: Operand,
+        bias: Optional[Operand],
+        in1: Operand,
+        stride: Union[int, List[int]],
+        padding: Union[int, List[int]],
+        output_padding: Union[int, List[int]],
+        dilation: Union[int, List[int]],
+        groups: int,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.conv_transpose2d``.
+
+        *2D transposed convolution operation.*
+
+        Applies a 2D transposed convolution over an input image. This operation
+        can be seen as the gradient of Conv2d with respect to its input.
+        Also known as a deconvolution or fractionally strided convolution.
+
+        .. code-block:: mlir
+
+            // Apply 2D transposed convolution
+            %result = ttir.conv_transpose2d(%input, %weight, %bias, %output,
+                                          stride = [2, 2], padding = [1, 1],
+                                          output_padding = [1, 1], dilation = [1, 1],
+                                          groups = 1) :
+                tensor<1x1x4x4xf32>, tensor<1x1x3x3xf32>, tensor<1xf32>, tensor<1x1x9x9xf32> -> tensor<1x1x9x9xf32>
+            // Input tensor: 4x4 feature map
+            // Weight tensor: 3x3 kernel
+            // Output tensor: 9x9 upsampled feature map
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor of shape (batch, in_channels, height, width)
+        weight : Operand
+            Weight tensor of shape (in_channels, out_channels/groups, kernel_height, kernel_width)
+        bias : Optional[Operand]
+            Optional bias tensor of shape (out_channels)
+        in1 : Operand
+            Output tensor shape reference
+        stride : Union[int, List[int]]
+            Stride of the convolution
+        padding : Union[int, List[int]]
+            Padding added to input
+        output_padding : Union[int, List[int]]
+            Additional size added to output shape
+        dilation : Union[int, List[int]]
+            Dilation of the kernel
+        groups : int
+            Number of blocked connections from input to output channels
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            The output tensor after transposed convolution
+        """
+        if not bias:
+            bias = None
+        return self.op_proxy(
+            self.conv_transpose2d_golden_function,
+            ttir.ConvTranspose2dOp,
+            [in0, weight],
+            golden_kwargs={
+                "stride": stride,
+                "padding": padding,
+                "output_padding": output_padding,
+                "dilation": dilation,
+                "groups": groups,
+            },
+            ttir_kwargs={
+                "stride": (
+                    IntegerAttr.get(IntegerType.get_signless(32), stride)
+                    if isinstance(stride, int)
+                    else DenseI32ArrayAttr.get(stride)
+                ),
+                "padding": (
+                    IntegerAttr.get(IntegerType.get_signless(32), padding)
+                    if isinstance(padding, int)
+                    else DenseI32ArrayAttr.get(padding)
+                ),
+                "output_padding": (
+                    IntegerAttr.get(IntegerType.get_signless(32), output_padding)
+                    if isinstance(output_padding, int)
+                    else DenseI32ArrayAttr.get(output_padding)
+                ),
+                "dilation": (
+                    IntegerAttr.get(IntegerType.get_signless(32), dilation)
+                    if isinstance(dilation, int)
+                    else DenseI32ArrayAttr.get(dilation)
+                ),
+                "groups": (
+                    IntegerAttr.get(IntegerType.get_signless(32), groups)
+                    if isinstance(groups, int)
+                    else DenseI32ArrayAttr.get(groups)
+                ),
+                "bias": bias,
+            },
+            unit_attrs=unit_attrs,
+        )
+
+    @autodoc_skip
+    def conv_transpose2d_golden_function(
+        self,
+        input_tensor: Operand,
+        weight: Operand,
+        stride: Union[int, List[int]],
+        padding: Union[int, List[int]],
+        output_padding: Union[int, List[int]],
+        dilation: Union[int, List[int]],
+        groups: int,
+    ) -> Operand:
+        # Reorganize ttir_kwargs into golden_kwargs
+        stride = list(stride) if not isinstance(stride, int) else int(stride)
+        padding = list(padding) if not isinstance(padding, int) else int(padding)
+        output_padding = (
+            list(output_padding)
+            if not isinstance(output_padding, int)
+            else int(output_padding)
+        )
+        dilation = list(dilation) if not isinstance(dilation, int) else int(dilation)
+        golden_bias = torch.rand((weight.size()[0]), dtype=input_tensor.dtype)
+
+        # Reorganize input and output tensors, golden and ttir functions have different expected tensor shapes
+        input_tensor = input_tensor.transpose(-2, -1).transpose(-3, -2)
+        result = torch.nn.functional.conv_transpose2d(
+            input_tensor,
+            weight,
+            bias=golden_bias,
+            stride=stride,
+            padding=padding,
+            output_padding=output_padding,
+            dilation=dilation,
+            groups=groups,
+        )
+        result = result.transpose(-3, -2).transpose(-2, -1)
+        return result
+
+    def max_pool2d(
+        self,
+        in0: Operand,
+        in1: Operand,
+        kernel_height: int,
+        kernel_width: int,
+        stride_height: int,
+        stride_width: int,
+        dilation_height: int,
+        dilation_width: int,
+        ceil_mode: bool,
+        padding_left: int,
+        padding_right: int,
+        padding_top: int,
+        padding_bottom: int,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.max_pool2d``.
+
+        *Max pooling operation.*
+
+        Applies a 2D max pooling over an input signal composed of several input planes.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        kernel_size : Union[int, List[int]]
+            Size of the pooling window
+        stride : Optional[Union[int, List[int]]], optional
+            Stride of the pooling window (default: None, same as kernel_size)
+        padding : Union[int, List[int]], optional
+            Padding added to all sides of input (default: 0)
+        dilation : Union[int, List[int]], optional
+            Controls spacing between kernel elements (default: 1)
+        ceil_mode : bool, optional
+            When True, use ceil instead of floor for output shape (default: False)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Output tensor after max pooling
+        """
+        return self.op_proxy(
+            self.max_pool2d_golden_function,
+            ttir.MaxPool2dOp,
+            [in0],
+            golden_kwargs={
+                "kernel_size": (kernel_height, kernel_width),
+                "stride": (stride_height, stride_width),
+                "padding": (padding_top, padding_left),
+                "dilation": (dilation_height, dilation_width),
+                "ceil_mode": ceil_mode,
+            },
+            ttir_kwargs={
+                "kernel_height": kernel_height,
+                "kernel_width": kernel_width,
+                "stride_height": stride_height,
+                "stride_width": stride_width,
+                "dilation_height": dilation_height,
+                "dilation_width": dilation_width,
+                "ceil_mode": ceil_mode,
+                "padding_left": padding_left,
+                "padding_right": padding_right,
+                "padding_top": padding_top,
+                "padding_bottom": padding_bottom,
+            },
+            unit_attrs=unit_attrs,
+        )
+
+    @autodoc_skip
+    def tilize_golden(self, input: torch.Tensor) -> torch.Tensor:
+        shape = input.shape
+        TILE_SIZE = 32
+        FACE_SIZE = 16
+        Y_TILES = shape[0] // TILE_SIZE
+        X_TILES = shape[1] // TILE_SIZE
+        FACES_PER_TILE = TILE_SIZE // FACE_SIZE
+
+        tilized = torch.zeros((input.numel(),))
+
+        idx = 0
+        for tile_y in range(Y_TILES):
+            for tile_x in range(X_TILES):
+                for face_y in range(FACES_PER_TILE):
+                    for face_x in range(FACES_PER_TILE):
+                        for datum_y in range(FACE_SIZE):
+                            for datum_x in range(FACE_SIZE):
+                                tilized[idx] = input[
+                                    datum_y + tile_y * TILE_SIZE + face_y * FACE_SIZE,
+                                    datum_x + tile_x * TILE_SIZE + face_x * FACE_SIZE,
+                                ]
+                                idx += 1
+
+        tilized = tilized.reshape(shape)
+        return tilized
+
+    @autodoc_skip
+    def untilize_golden(self, input: torch.Tensor) -> torch.Tensor:
+        shape = input.shape
+        TILE_SIZE = 32
+        FACE_SIZE = 16
+        Y_TILES = shape[0] // TILE_SIZE
+        X_TILES = shape[1] // TILE_SIZE
+        FACES_PER_TILE = TILE_SIZE // FACE_SIZE
+
+        untilized = torch.zeros_like(input)
+        flattened = input.flatten()
+
+        idx = 0
+        for tile_y in range(Y_TILES):
+            for tile_x in range(X_TILES):
+                for face_y in range(FACES_PER_TILE):
+                    for face_x in range(FACES_PER_TILE):
+                        for datum_y in range(FACE_SIZE):
+                            for datum_x in range(FACE_SIZE):
+                                # Calculate the original position
+                                orig_y = (
+                                    datum_y + tile_y * TILE_SIZE + face_y * FACE_SIZE
+                                )
+                                orig_x = (
+                                    datum_x + tile_x * TILE_SIZE + face_x * FACE_SIZE
+                                )
+
+                                # Place the value from the tilized tensor back to its original position
+                                untilized[orig_y, orig_x] = flattened[idx]
+                                idx += 1
+
+        return untilized
+
+    @autodoc_skip
+    def max_pool2d_golden_function(
+        self,
+        input_tensor: Operand,
+        kernel_size: tuple[int],
+        stride: tuple[int],
+        padding: tuple[int],
+        dilation: tuple[int],
+        ceil_mode: bool,
+    ):
+        # TTIR  max_pool2d is channels last. PyTorch max_pool2d is channels first.
+        # We need to transpose the input tensor to channels first before applying max_pool2d,
+        # and transpose back to channels last afterward to properly calculate the golden tensor.
+        # TTIR  max_pool2d is channels last. PyTorch max_pool2d is channels first.
+        # We need to transpose the input tensor to channels first before applying max_pool2d,
+        # and transpose back to channels last afterward to properly calculate the golden tensor.
+        maxpool_object = torch.nn.MaxPool2d(
+            kernel_size, stride, padding, dilation, ceil_mode
+        )
+        input_tensor = input_tensor.transpose(-2, -1).transpose(-3, -2)
+        result = maxpool_object(input_tensor)
+        result = result.transpose(-3, -2).transpose(-2, -1)
+        return result
+
+    def reshape(
+        self, in0: Operand, shape: Shape, unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.reshape``.
+
+        *Tensor reshape operation.*
+
+        The `reshape` operation changes the shape of a tensor without changing the data or number of elements.
+        The total number of elements in the tensor must remain the same after reshaping. This operation is
+        commonly used in neural networks to change the dimensionality of tensors between layers.
+
+        Example:
+        ```mlir
+        // Reshape a 2x3 tensor to a 1x6 tensor
+        %input = ... : tensor<2x3xf32>  // Input tensor with shape [2,3]
+        %output = ttir.empty() : tensor<1x6xf32>  // Output tensor with shape [1,6]
+        %result = ttir.reshape(%input, %output) {shape = [1, 6]} :
+            tensor<2x3xf32>, tensor<1x6xf32> -> tensor<1x6xf32>
+        ```
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor to reshape
+        shape : Shape
+            The new shape for the tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            The reshaped tensor
+        """
+        kwargs = {"shape": shape}
+        return self.op_proxy(
+            torch.reshape,
+            ttir.ReshapeOp,
+            [in0],
+            ttir_kwargs=kwargs,
+            golden_kwargs=kwargs,
+            unit_attrs=unit_attrs,
+        )
+
+    def pad(
+        self,
+        in0: Operand,
+        in1: Operand,
+        padding: List[int],
+        value: int,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.pad``.
+
+        *Tensor padding operation.*
+
+        Pads a tensor with a constant value. The padding amount is specified for each dimension
+        and can be asymmetric (different padding at the start and end of each dimension).
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor to pad
+        in1 : Operand
+            Output tensor
+        padding : List[int]
+            Amount of padding for each dimension
+        value : int
+            Value to use for padding
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            The padded tensor
+        """
+        # Reformatting padding dimensions for golden tensor:
+        golden_padding = []
+        for i in range(len(padding) // 2):
+            golden_padding.append(padding[-((2 * i) + 2)])
+            golden_padding.append(padding[-((2 * i) + 1)])
+        return self.op_proxy(
+            torch.nn.functional.pad,
+            ttir.PadOp,
+            [in0, in1],
+            golden_kwargs={"pad": golden_padding, "mode": "constant", "value": value},
+            ttir_kwargs={"padding": padding, "value": value},
+            organize_golden_args=lambda i: [self._get_golden_tensor(i[0])],
+            organize_ttir_args=lambda i, o, _: (self._get_type(o), i[0], i[1]),
+            unit_attrs=unit_attrs,
+        )
+
+    def select(
+        self,
+        in0: Operand,
+        dim: int = 0,
+        begin: int = 0,
+        length: int = 2,
+        stride: int = 2,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.select``.
+
+        *Tensor selection operation.*
+
+        Selects a slice of the input tensor along the specified dimension with given stride.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim : int, optional
+            Dimension to select from (default: 0)
+        begin : int, optional
+            Starting index (default: 0)
+        length : int, optional
+            Length of the slice (default: 2)
+        stride : int, optional
+            Stride between elements (default: 2)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            The selected slice of the tensor
+        """
+        end = begin + length - 1
+        index = torch.tensor([begin, end])
+        return self.op_proxy(
+            torch.index_select,
+            ttir.IndexSelectOp,
+            [in0],
+            golden_kwargs={"dim": dim, "index": index},
+            ttir_kwargs={
+                "dim": dim,
+                "begin": begin,
+                "length": length,
+                "stride": stride,
+            },
+            unit_attrs=unit_attrs,
+        )
+
+    def index(
+        self,
+        in0: Operand,
+        dim: int,
+        begin: int,
+        end: int,
+        step: int,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.index``.
+
+        *Tensor indexing operation.*
+
+        Indexes into the input tensor along the specified dimension using a range of indices.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim : int
+            Dimension to index into
+        begin : int
+            Starting index
+        end : int
+            Ending index (exclusive)
+        step : int
+            Step size between indices
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            The indexed tensor
+        """
+        import math
+
+        num_indices = math.ceil((end - begin) / step)
+        indices = []
+        for i in range(num_indices):
+            indices.append((begin + i) * step)
+        index = torch.tensor(indices)
+        return self.op_proxy(
+            torch.index_select,
+            ttir.IndexOp,
+            [in0],
+            golden_kwargs={"dim": dim, "index": index},
+            ttir_kwargs={"dim": dim, "begin": begin, "end": end, "step": step},
+            unit_attrs=unit_attrs,
+        )
+
+    def squeeze(
+        self,
+        in0: Operand,
+        dim: Optional[int] = 0,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.squeeze``.
+
+        *Tensor squeeze operation.*
+
+        Removes dimensions of size 1 from the shape of a tensor.
+        If dim is specified, only squeezes the dimension if it has size 1.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim : Optional[int], optional
+            Dimension to squeeze (default: 0)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with specified dimensions of size 1 removed
+        """
+        kwargs = {"dim": dim}
+        return self.op_proxy(
+            torch.squeeze,
+            ttir.SqueezeOp,
+            [in0],
+            golden_kwargs=kwargs,
+            ttir_kwargs=kwargs,
+            unit_attrs=unit_attrs,
+        )
+
+    def unsqueeze(
+        self,
+        in0: Operand,
+        dim: Optional[int] = 0,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.unsqueeze``.
+
+        *Tensor unsqueeze operation.*
+
+        Adds a dimension of size 1 at the specified position.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dim : Optional[int], optional
+            Position to insert the new dimension (default: 0)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with a new dimension of size 1 inserted
+        """
+        kwargs = {"dim": dim}
+        return self.op_proxy(
+            torch.unsqueeze,
+            ttir.UnsqueezeOp,
+            [in0],
+            golden_kwargs=kwargs,
+            ttir_kwargs=kwargs,
+            unit_attrs=unit_attrs,
+        )
+
+    def clamp_scalar(
+        self,
+        in0: Operand,
+        min_arg: Optional[float] = None,
+        max_arg: Optional[float] = None,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        kwargs = {"min": min_arg, "max": max_arg}
+        return self.op_proxy(
+            torch.clamp,
+            ttir.ClampScalarOp,
+            [in0],
+            ttir_kwargs=kwargs,
+            golden_kwargs=kwargs,
+            unit_attrs=unit_attrs,
+        )
+
+    def clamp_tensor(
+        self,
+        in0: Operand,
+        in1: Operand,
+        in2: Operand,
+        in3: Operand,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        return self.op_proxy(
+            torch.clamp,
+            ttir.ClampTensorOp,
+            [in0, in1, in2, in3],
+            golden_kwargs={
+                "input": self._get_golden_tensor(in0),
+                "min": self._get_golden_tensor(in1),
+                "max": self._get_golden_tensor(in2),
+                "out": self._get_golden_tensor(in3),
+            },
+            organize_ttir_args=lambda i, o, _: (
+                self._get_type(o),
+                i[0],
+                i[1],
+                i[2],
+                i[3],
+            ),
+            organize_golden_args=lambda i: 0,
+            unit_attrs=unit_attrs,
+        )
+
+    def zeros(
+        self,
+        shape: Shape,
+        data_type: Optional[Type] = None,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.zeros``.
+
+        *Creates a tensor filled with zeros.*
+
+        Returns a tensor of given shape filled with zeros.
+
+        Parameters
+        ----------
+        shape : Shape
+            Shape of the output tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor of zeros with specified shape
+        """
+        output = self.ranked_tensor_type(shape)
+        dtype = data_type if data_type is not None else self._default_dtype
+        return self.op_proxy(
+            torch.zeros,
+            ttir.ZerosOp,
+            [],
+            golden_kwargs={"size": shape},
+            ttir_kwargs={"result": output, "shape": shape},
+            organize_ttir_args=lambda i, o, shape: 0,
+            output_type=dtype,
+            unit_attrs=unit_attrs,
+        )
+
+    def ones(self, shape: Shape, unit_attrs: Optional[List[str]] = None) -> OpView:
+        """
+        Creates ``ttir.ones``.
+
+        *Creates a tensor filled with ones.*
+
+        Returns a tensor of given shape filled with ones.
+
+        Parameters
+        ----------
+        shape : Shape
+            Shape of the output tensor
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor of ones with specified shape
+        """
+        output = self.ranked_tensor_type(shape)
+        return self.op_proxy(
+            torch.ones,
+            ttir.OnesOp,
+            [],
+            golden_kwargs={"size": shape},
+            ttir_kwargs={"result": output, "shape": shape},
+            organize_ttir_args=lambda i, o, shape: 0,
+            unit_attrs=unit_attrs,
+        )
+
+    def reverse(
+        self, in0: Operand, dims: List[int], unit_attrs: Optional[List[str]] = None
+    ) -> OpView:
+        """
+        Creates ``ttir.reverse``.
+
+        *Tensor reverse operation.*
+
+        Reverses the order of elements along specified dimensions.
+        The input and output shapes must match.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        dims : List[int]
+            Dimensions to reverse
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with reversed elements
+        """
+        return self.op_proxy(
+            torch.flip,
+            ttir.ReverseOp,
+            [in0],
+            golden_kwargs={"dims": dims},
+            ttir_kwargs={"dimensions": dims},
+            unit_attrs=unit_attrs,
+        )
+
+    def linear(
+        self,
+        in0: Operand,
+        in1: Operand,
+        bias: Optional[Operand] = None,
+        transpose_a: bool = False,
+        transpose_b: bool = False,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.linear``.
+
+        *Linear transformation operation.*
+
+        Applies a linear transformation to the incoming data: y = xA^T + b
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        weight : Operand
+            Weight matrix
+        bias : Optional[Operand], optional
+            Bias vector (default: None)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Output tensor after linear transformation
+        """
+        kwargs = {"transpose_a": transpose_a, "transpose_b": transpose_b, "bias": bias}
+        return self.op_proxy(
+            self.linear_golden_function,
+            ttir.LinearOp,
+            [in0, in1],
+            golden_kwargs=kwargs,
+            ttir_kwargs=kwargs,
+            unit_attrs=unit_attrs,
+        )
+
+    @autodoc_skip
+    def linear_golden_function(
+        self,
+        a: Operand,
+        b: Operand,
+        bias: Optional[Operand] = None,
+        transpose_a: bool = False,
+        transpose_b: bool = False,
+    ) -> OpView:
+        a = torch.transpose(a, 0, 1) if transpose_a else a
+        b = torch.transpose(b, 0, 1) if transpose_a else b
+        output = torch.matmul(a, b)
+        bias = (
+            torch.zeros(list(output.shape))
+            if not bias
+            else self._get_golden_tensor(bias)
+        )
+        bias = (
+            torch.broadcast_to(bias, list(output.shape))
+            if bias.shape != output.shape
+            else bias
+        )
+        return torch.add(output, bias)
+
+    def matmul(
+        self,
+        in0: Operand,
+        in1: Operand,
+        bias: Optional[Operand] = None,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        inputs = [in0, in1]
+        if bias:
+            inputs.append(bias)
+        return self.op_proxy(
+            torch.matmul,
+            ttir.MatmulOp,
+            inputs,
+            unit_attrs=unit_attrs,
+        )
+
+    def permute(
+        self,
+        in0: Operand,
+        in1: Operand,
+        permutation: List[int],
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.permute``.
+
+        *Tensor permutation operation.*
+
+        Permutes the dimensions of the input tensor according to the given permutation.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor
+        permutation : List[int]
+            The desired ordering of dimensions
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            Tensor with permuted dimensions
+        """
+        return self.op_proxy(
+            torch.permute,
+            ttir.PermuteOp,
+            [in0, in1],
+            golden_kwargs={"dims": tuple(permutation)},
+            ttir_kwargs={"permutation": DenseI64ArrayAttr.get(permutation)},
+            organize_golden_args=lambda i: [self._get_golden_tensor(i[0])],
+            organize_ttir_args=lambda i, o, _: (self._get_type(i[1]), i[0], i[1]),
+            unit_attrs=unit_attrs,
+        )
+
+    def upsample2d(
+        self,
+        in0: Operand,
+        in1: Operand,
+        scale_factor: Union[int, List[int]],
+        mode: str = "nearest",
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        output_shape = self._get_golden_tensor(in1).shape
+        kwargs = {
+            "scale_factor": (
+                IntegerAttr.get(IntegerType.get_signed(32), scale_factor)
+                if isinstance(scale_factor, int)
+                else DenseI32ArrayAttr.get(scale_factor)
+            ),
+            "mode": mode,
+        }
+        return self.op_proxy(
+            self.upsample2d_golden_function,
+            ttir.Upsample2dOp,
+            [in0, in1],
+            golden_kwargs=kwargs,
+            ttir_kwargs=kwargs,
+            organize_ttir_args=lambda i, o, _: (self._get_type(i[1]), i[0], o),
+            output_shape=output_shape,
+            unit_attrs=unit_attrs,
+        )
+
+    @autodoc_skip
+    def upsample2d_golden_function(
+        self,
+        in0: Operand,
+        in1: Operand,
+        scale_factor: Union[SI32Attr, DenseI32ArrayAttr],
+        mode: str = "nearest",
+    ) -> OpView:
+        transposed_golden = torch.transpose(in0, 1, 3)
+        golden_output_shape = in1.shape[1:-1]
+        output = torch.nn.functional.interpolate(
+            transposed_golden, size=golden_output_shape, mode=mode
+        )
+        return torch.transpose(output, 1, 3)
+
+    def arange(
+        self,
+        result: Operand,
+        start: int,
+        end: int,
+        step: int,
+        arange_dimension: int,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        """
+        Creates ``ttir.arange``.
+
+        *Creates a 1-D tensor of sequential values.*
+
+        Returns a 1-D tensor of size (end - start) / step with values from start to end taken with common difference step.
+
+        Parameters
+        ----------
+        start : int
+            Starting value
+        end : int
+            Ending value (exclusive)
+        step : int, optional
+            Step size between values (default: 1)
+        unit_attrs : Optional[List[str]], optional
+            Optional list of unit attributes
+
+        Returns
+        -------
+        *OpView*
+            1-D tensor with sequential values
+        """
+        single_dim_tensor = torch.arange(
+            start=start, end=end, step=step, dtype=self._get_golden_tensor(result).dtype
+        )
+        shape = self.get_shape(result)
+        repeat_dims = []
+        for i in range(len(shape)):
+            if i == arange_dimension:
+                repeat_dims.append(int(shape[i] / ((end - start) / step)))
+            else:
+                repeat_dims.append(shape[i])
+
+        return self.op_proxy(
+            torch.Tensor.repeat,
+            ttir.ArangeOp,
+            [result, single_dim_tensor],
+            golden_kwargs={"repeats": tuple(repeat_dims)},
+            ttir_kwargs={
+                "start": start,
+                "end": end,
+                "step": step,
+                "arange_dimension": arange_dimension,
+            },
+            organize_ttir_args=lambda i, o, _: (self._get_type(o),),
+            organize_golden_args=lambda i: [i[1]],
+            output_shape=shape,
+            output_type=self.get_type_from_torch_dtype(
+                self._get_golden_tensor(result).dtype
+            ),
+            unit_attrs=unit_attrs,
         )
 
     # TTIR top level generic ops
     # class TTIR_GenericElementwiseUnaryOp
-
-    def neg(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
-        """
-        Creates ``ttir.neg``.
-
-        *Elementwise negate operation.*
-
-        Computes the negation of each element in the input tensor.
-        For each element, returns the negation of the value.
-
-        Mathematical definition: neg(x) = -x
-
-        .. code-block:: mlir
-
-            // Compute negation of all elements
-            %result = ttir.neg(%input, %output) : tensor<4xf32>, tensor<4xf32> -> tensor<4xf32>
-            // Input tensor:
-            // [1.7, 2.0, -0.3, 4.5]
-            // Output tensor:
-            // [-1.7, -2.0, 0.3, -4.5]
-
-        Parameters
-        ----------
-        in0 : Operand
-            Input tensor
-        unit_attrs : Optional[List[str]], optional
-            Optional list of unit attributes
-
-        Returns
-        -------
-        *OpView*
-            A tensor containing the negation of each input element
-        """
-        return self.eltwise_proxy(torch.neg, ttir.NegOp, [in0], unit_attrs=unit_attrs)
 
     def exp(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
         """
@@ -1238,46 +3683,9 @@ class TTIRBuilderOps:
         *OpView*
             A tensor containing the exponential of each element in the input tensor
         """
-        return self.eltwise_proxy(torch.exp, ttir.ExpOp, [in0], unit_attrs)
+        return self.eltwise_proxy(torch.exp, ttir.ExpOp, [in0], unit_attrs=unit_attrs)
 
-    def log1p(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
-        """
-        Creates ``ttir.log1p``.
-
-        *Elementwise natural logarithm of one plus input operation.*
-
-        Computes the natural logarithm of one plus each element in the input tensor.
-        For each element x, returns ln(1 + x). This operation is more accurate than
-        computing log(1 + x) directly for x values close to zero, where catastrophic
-        cancellation can occur in the addition.
-
-        Mathematical definition: log1p(x) = ln(1 + x)
-
-        This operation is defined for x > -1. For values less than or equal to -1,
-        the behavior depends on the implementation.
-
-        .. code-block:: mlir
-
-            // Compute log1p of all elements
-            %result = ttir.log1p(%input, %output) : tensor<4xf32>, tensor<4xf32> -> tensor<4xf32>
-            // Input tensor:
-            // [0.0, -0.999, 7.0, 6.38905621, 15.0]
-            // Output tensor:
-            // [0.0, -6.90776825, 2.07944155, 2.0, 2.77258873]
-
-        Parameters
-        ----------
-        in0 : Operand
-            Input tensor
-        unit_attrs : Optional[List[str]], optional
-            Optional list of unit attributes
-
-        Returns
-        -------
-        *OpView*
-            A tensor containing the log1p values of the input tensor
-        """
-        return self.eltwise_proxy(torch.log1p, ttir.Log1pOp, [in0], unit_attrs)
+    # class TTIR_GenericElementwiseBinaryOp
 
     def add(
         self, in0: Operand, in1: Operand, unit_attrs: Optional[List[str]] = None
@@ -1426,20 +3834,19 @@ class TTIRBuilderOps:
         For each pair of corresponding elements, divides the element in the first
         tensor by the element in the second tensor.
 
-        Mathematical definition: div(x, y) = x / y
+        Note: Division by zero behavior depends on the implementation and data type.
 
-        Note: The data type of the output tensor matches the data type of
-        the input tensors.
+        Mathematical definition: div(x, y) = x / y
 
         .. code-block:: mlir
 
             // Divide corresponding elements
             %result = ttir.div(%lhs, %rhs, %output) : tensor<3xf32>, tensor<3xf32>, tensor<3xf32> -> tensor<3xf32>
             // Input tensors:
-            // lhs: [1.5, 2.0, -1.2]
-            // rhs: [0.5, 3.0, 2.2]
+            // lhs: [3.5, 0.0, -1.2]
+            // rhs: [1.5, 2.0, -3.2]
             // Output tensor:
-            // [3.0, 0.6666667, -0.54545455]
+            // [2.333, 0.0, 0.375]
 
         Parameters
         ----------
@@ -1467,20 +3874,7 @@ class TTIRBuilderOps:
 
         *Elementwise maximum operation.*
 
-        Computes the elementwise maximum between two tensors.
-        For each pair of corresponding elements, selects the larger value.
-
-        Mathematical definition: maximum(x, y) = max(x, y)
-
-        .. code-block:: mlir
-
-            // Compute maximum of corresponding elements
-            %result = ttir.maximum(%lhs, %rhs, %output) : tensor<3xf32>, tensor<3xf32>, tensor<3xf32> -> tensor<3xf32>
-            // Input tensors:
-            // lhs: [1.5, 2.0, -1.2]
-            // rhs: [0.5, 3.0, 2.2]
-            // Output tensor:
-            // [1.5, 3.0, 2.2]
+        Returns the element-wise maximum of two tensors.
 
         Parameters
         ----------
@@ -1494,7 +3888,7 @@ class TTIRBuilderOps:
         Returns
         -------
         *OpView*
-            A tensor containing the elementwise maximum of the inputs
+            Tensor with maximum values
         """
         return self.eltwise_proxy(
             torch.maximum, ttir.MaximumOp, [in0, in1], unit_attrs=unit_attrs
@@ -1685,25 +4079,20 @@ class TTIRBuilderOps:
         """
         Creates ``ttir.to_layout``.
 
-        *Transform tensor to a different memory layout.*
+        *Layout operation.*
 
-        Transitions a tensor from one layout to another. This operation can handle:
-        - Memory space transitions (e.g., DRAM to L1)
-        - Data type conversions (e.g., f32 to f16)
-        - Tile size changes (e.g., 1x16 to 32x32)
-        - Tensor sharding modifications
-        - Combinations of the above transformations
+        ToLayout operation, transition tensors from one layout to another. Some examples include:
+        - Transitioning between different memory spaces, e.g. DRAM to L1.
+        - Transitioning between different data types, e.g. f32 to f16.
+        - Transitioning between different tile sizes, e.g. 1x16 to 32x32
+        - Transitioning between different tensor sharding
+        - Some combination of the above
 
         .. code-block:: mlir
 
-            // Transform tensor from system memory to L1 memory
-            %result = ttir.to_layout(%input) : tensor<64x128xf32, #system> -> tensor<64x128xf32, #l1>
-            // Input tensor in system memory:
-            // [[1.5, 2.0, ...],
-            //  [3.0, 4.0, ...]]
-            // Output tensor in L1 memory (same values, different layout):
-            // [[1.5, 2.0, ...],
-            //  [3.0, 4.0, ...]]
+            #layout = #ttcore.metal_layout<8192x128x1, undef, <1x1>, memref<64x128xf32, #system>>
+            #layout1 = #ttcore.metal_layout<8192x128x1, undef, <1x1>, memref<64x128xf32, #l1_>>
+            %1 = "ttir.to_layout"(%arg0, %0) : (tensor<64x128xf32, #layout>, tensor<64x128xf32, #layout1>) -> tensor<64x128xf32, #layout1>
 
         Parameters
         ----------
@@ -1752,25 +4141,23 @@ class TTIRBuilderOps:
         or moving data. This is useful for reinterpreting the same data with different
         layout metadata.
 
+        - If reinterpretLayout is true, the layout view change can include a data type cast, but note this does not actually change the format of the data in memory.
+        - All ViewLayout ops can trivially be converted to ToLayout ops.
+
         .. code-block:: mlir
 
-            // Create a new view of tensor with different layout
-            %result = ttir.view_layout(%input) {reinterpret_layout = false} : tensor<64x128xf32, #layout1> -> tensor<64x128xf32, #layout2>
-            // Input tensor with layout1:
-            // [[1.5, 2.0, ...],
-            //  [3.0, 4.0, ...]]
-            // Output tensor with layout2 (same data, different metadata):
-            // [[1.5, 2.0, ...],
-            //  [3.0, 4.0, ...]]
+            #layout = #ttcore.metal_layout<8192x128x1, undef, <1x1>, memref<64x128xf32, #system>>
+            #layout1 = #ttcore.metal_layout<8192x128x1, undef, <1x1>, memref<64x128xf32, #l1_>>
+            %1 = "ttir.view_layout"(%arg0, %0) : (tensor<64x128xf32, #layout>, tensor<64x128xf32, #layout1>) -> tensor<64x128xf32, #layout1>
 
         Parameters
         ----------
         in0 : Operand
-            Input tensor to create view from
+            Input tensor to create new view from
         output_type : RankedTensorType
-            Target type specifying the desired layout view
+            Type of output tensor with desired layout
         reinterpret_layout : bool, optional
-            If True, reinterprets the layout without validation
+            If true, allows data type cast in layout view change (default: False)
         unit_attrs : Optional[List[str]], optional
             Optional list of unit attributes
 
@@ -1899,6 +4286,7 @@ class TTIRBuilderOps:
         )
 
     # CCL ops
+
     def mesh_shard(
         self,
         input: Operand,
@@ -2029,29 +4417,9 @@ class TTIRBuilderOps:
         """
         Creates ``ttir.all_reduce``.
 
-        *Reduce tensor data across all devices.*
+        *AllReduce operation.*
 
-        Performs a reduction operation (e.g., sum, max) across all devices in the system
-        and broadcasts the result back to all devices. The reduction can be performed
-        along different axes of the device mesh.
-
-        For a mesh shape of [2,4] with device IDs:
-        [[0, 1, 2, 3],
-         [4, 5, 6, 7]]
-
-        - If cluster_axis=0: Reduces along columns (0,4), (1,5), (2,6), (3,7)
-        - If cluster_axis=1: Reduces along rows (0,1,2,3), (4,5,6,7)
-
-        .. code-block:: mlir
-
-            // Sum tensor data across all devices
-            %result = ttir.all_reduce(%input) {reduce_type = "sum", cluster_axis = 1} : tensor<32x64xf32> -> tensor<32x64xf32>
-            // Input tensor on device 0:
-            // [[1.0, 2.0],
-            //  [3.0, 4.0]]
-            // Output tensor after reduction (same on all devices):
-            // [[10.0, 20.0],  // sum of values from all devices
-            //  [30.0, 40.0]]
+        AllReduce op.
 
         Parameters
         ----------
@@ -2087,31 +4455,9 @@ class TTIRBuilderOps:
         """
         Creates ``ttir.reduce_scatter``.
 
-        *Reduce tensor data and scatter results across devices.*
+        *Reduce scatter operation.*
 
-        Performs a reduction operation across all devices and then scatters different
-        parts of the result to different devices. The reduction and scatter operations
-        can be performed along different axes of the device mesh.
-
-        For a mesh shape of [2,4] with device IDs:
-        [[0, 1, 2, 3],
-         [4, 5, 6, 7]]
-
-        - If cluster_axis=0: Reduces along columns (0,4), (1,5), (2,6), (3,7)
-        - If cluster_axis=1: Reduces along rows (0,1,2,3), (4,5,6,7)
-
-        .. code-block:: mlir
-
-            // Sum tensor data and scatter along dimension 0
-            %result = ttir.reduce_scatter(%input) {reduce_type = "sum", scatter_dim = 0, cluster_axis = 1} : tensor<128x64xf32> -> tensor<32x64xf32>
-            // Input tensor on each device:
-            // [[1.0, 2.0],
-            //  [3.0, 4.0]]
-            // Output tensors after reduction and scatter:
-            // Device 0: [[10.0, 20.0]]  // sum of first quarter
-            // Device 1: [[30.0, 40.0]]  // sum of second quarter
-            // Device 2: [[50.0, 60.0]]  // sum of third quarter
-            // Device 3: [[70.0, 80.0]]  // sum of fourth quarter
+        Reduce scatter op.
 
         Parameters
         ----------
@@ -2148,22 +4494,16 @@ class TTIRBuilderOps:
         """
         Creates ``ttir.collective_permute``.
 
-        *Multi-device tensor permutation operation.*
+        *Collective permute operation.*
 
-        This operation ingests a multi-device tensor spread across devices and shuffles
-        the data according to source_target_pairs [['src', 'dest']].
+        Collective permute op. This operation ingests a multi-device tensor spread across multi-devices and will shuffle the data according to source_target_pairs [['src', 'dest']].
 
-        .. code-block:: mlir
+        Example:
+            For a 1x2 mesh, the following will take the device shard living in device 0 and move it to device 1. The device shard living in device 1 will move to device 0.
+        %source_target_pairs: [[0, 1], [1, 0]]
 
-            // Example with 1x2 mesh - swap shards between devices 0 and 1
-            %result = ttir.collective_permute(%input) {
-              source_target_pairs = [[0, 1], [1, 0]]
-            } : tensor<2x4xf32> -> tensor<2x4xf32>
-
-            // Example with missing destination - device 0 shard becomes zeros
-            %result = ttir.collective_permute(%input) {
-              source_target_pairs = [[0, 1]]
-            } : tensor<2x4xf32> -> tensor<2x4xf32>
+        In the case of missing 'dest', the device shard living on that device will contain values of 0. For example, device shard living in device 0 will contain 0 values.
+        %source_target_pairs: [[0, 1]]
 
         Parameters
         ----------
