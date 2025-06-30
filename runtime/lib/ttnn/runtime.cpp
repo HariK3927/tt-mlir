@@ -1044,10 +1044,6 @@ getOpOutputRef(OpContext opContextHandle,
     tensorRef = opContext.type_as_PrepareConv2dWeightsOp()->out();
     break;
   }
-  case ::tt::target::ttnn::OpType::PrepareConv2dBiasOp: {
-    tensorRef = opContext.type_as_PrepareConv2dBiasOp()->out();
-    break;
-  }
   case ::tt::target::ttnn::OpType::BatchNormOp: {
     tensorRef = opContext.type_as_BatchNormOp()->out();
     break;
@@ -1285,10 +1281,6 @@ getOpInputRefs(OpContext opContextHandle,
   }
   case ::tt::target::ttnn::OpType::PrepareConv2dWeightsOp: {
     tensorRefs = {opContext.type_as_PrepareConv2dWeightsOp()->weight_tensor()};
-    break;
-  }
-  case ::tt::target::ttnn::OpType::PrepareConv2dBiasOp: {
-    tensorRefs = {opContext.type_as_PrepareConv2dBiasOp()->bias_tensor()};
     break;
   }
   case ::tt::target::ttnn::OpType::BatchNormOp: {
