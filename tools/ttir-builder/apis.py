@@ -596,9 +596,11 @@ class TTIRBuilder(TTIRBuilderOps):
     def metal_tensor_layout(
         self,
         shape: Shape,
+        grid,
         tiled=False,
-        oobVal=ttcore.OOBVal.Undef,
         memorySpace=ttcore.MemorySpace.DeviceL1,
+        collapseIntervals=[(0, -1)],
+        oobVal=ttcore.OOBVal.Undef,
     ):
         """
         Creates a metal tensor layout with attributes including grid,
@@ -623,23 +625,14 @@ class TTIRBuilder(TTIRBuilderOps):
             Tensor type with metal layout attributes
         """
         ctx = self._ctx
-
-        # Create layout with original logical shape.
-        layout = ttcore.ir.MetalLayoutAttr.get(ctx, shape, oobVal, memorySpace)
-
-        # Then shard the new shape by adding 1-filled grid dims.
-        original_rank = len(shape)
-        extended_shape = [1] * original_rank + list(shape)
-
-        elemType = F32Type.get(ctx)
-
-        if tilize:
-            elemType = ttcore.ir.TileType.get(ctx, 32, 32, ttcore.DataType.Float32)
-            extended_shape[-2] //= 32
-            extended_shape[-1] //= 32
-
+        if isinstance(grid, list) or isinstance(grid, tuple):
+            grid = ttcore.ir.GridAttr.get(ctx, list(grid))
+        tensorTy = RankedTensorType.get(shape, F32Type.get(ctx))
+        layout = ttcore.ir.MetalLayoutAttr.get(
+            self._ctx, tensorTy, grid, tiled, memorySpace, collapseIntervals, oobVal
+        )
         return RankedTensorType.get(
-            extended_shape, elemType, layout, Location.unknown(ctx)
+            shape, F32Type.get(ctx), layout, Location.unknown(ctx)
         )
 
     def empty_from_tensor_type(
