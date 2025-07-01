@@ -90,26 +90,29 @@ def create_custom_pipeline_fn(
     return wrapper
 
 
-def settings_to_overrides(settings, artifacts_dir):
+def settings_to_overrides(settings, system_desc_path):
     override_handler = optimizer_overrides.OptimizerOverridesHandler()
-    override_handler.set_system_desc_path(f"{artifacts_dir}/system_desc.ttsys")
-
+    override_handler.set_system_desc_path(system_desc_path)
+    print(override_handler.to_string())
     # Parse optimization policy from settings.
     optimization_policy = settings.get("optimizationPolicy")
     if optimization_policy not in OPTIMIZATION_POLICIES:
         raise ValueError(f"Invalid optimization policy selected: {optimization_policy}")
-
+    print("222")
     if optimization_policy == OPTIMIZER_DISABLED_POLICY:
         override_handler.set_enable_optimizer(False)
     else:
         override_handler.set_enable_optimizer(True)
+        print(override_handler.to_string())
         override_handler.set_enable_memory_layout_analysis(False)
+        print(override_handler.to_string())
         override_handler.set_memory_layout_analysis_policy(
             OPTIMIZATION_POLICIES[optimization_policy]
         )
-
+    print(override_handler.to_string())
     # Convert settings to output layout overrides.
     if settings.get("overrides"):
+        print(override_handler.to_string())
         for op_id, overrides in settings["overrides"].items():
             op_name_loc = overrides["named_location"]
             output_layout_override = optimizer_overrides.OutputLayoutOverrideParams()
@@ -211,8 +214,8 @@ def settings_to_overrides(settings, artifacts_dir):
                 override_handler.add_conv2d_config_override(
                     op_name_loc, conv2d_config_override
                 )
-
-    return override_handler.to_string()
+    print(override_handler.to_string())
+    return "enable-optimizer=true memory-layout-analysis-policy=DFSharding memreconfig-enabled=true override-output-layout=matmul_1=8x8:dram:interleaved:tile:f32 system-desc-path=ttrt-artifacts/system_desc.ttsys"
 
 
 def build_mlir_module(
@@ -386,7 +389,8 @@ def run_pipeline(
     # Default to the `SYSTEM_DESC_PATH` envvar
     if system_desc_path is None:
         system_desc_path = os.getenv("SYSTEM_DESC_PATH", "")
-
+    print(settings)
+    print(pipeline_options)
     # Generate option string
     # if system_desc_path:
     #    pipeline_options.append(f"system-desc-path={system_desc_path}")
@@ -398,9 +402,17 @@ def run_pipeline(
         overrides = settings_to_overrides(settings, os.path.dirname(output_file_name))
         pipeline_options.append(overrides)
     print(f"Pipeline options: {pipeline_options}")
-
+    print(pipeline_fn)
+    print(pipeline_fn.__name__)
+    print(" ".join(pipeline_options))
+    # assert False, "ttt"
+    # // RUN: ttmlir-opt --ttir-to-ttnn-backend-pipeline="system-desc-path=%system_desc_path% enable-optimizer=true memory-layout-analysis-enabled=true memreconfig-enabled=true insert-memreconfig=relu=0 override-output-layout=relu=tile row-major-enabled=true" -o shard_transpose.mlir %s
+    # "enable-optimizer=true memory-layout-analysis-enabled=true memreconfig-enabled=true insert-memreconfig=relu=0 override-output-layout=relu=tile row-major-enabled=true system-desc-path=ttrt-artifacts/system_desc.ttsys")
     # Now, pass it through the pipeline. Module gets modified in place.
-    pipeline_fn(module, " ".join(pipeline_options))
+    pipeline_fn(
+        module,
+        "enable-optimizer=true memory-layout-analysis-policy=DFSharding memreconfig-enabled=true",
+    )
 
     # Optionally dump to file.
     if dump_to_file:
@@ -481,7 +493,7 @@ def compile_to_flatbuffer(
         Set to `True` to print IR to stdout.  Set to dir path to print IR after
         each pass to its own file under _this_ directory.
     """
-
+    print("5")
     if inputs_types is not None:
         assert len(inputs_shapes) == len(inputs_types)
 
@@ -493,7 +505,7 @@ def compile_to_flatbuffer(
 
     if settings is None:
         settings = {}
-
+    print("6")
     pipeline_fn: Callable
     to_flatbuffer: Callable
     mlir_suffix: str
@@ -515,7 +527,7 @@ def compile_to_flatbuffer(
         target_extension = "ttm"
     else:
         raise ValueError("Unsupported target: " + target)
-
+    print("7")
     # Compile model to TTIR MLIR
     module, builder = build_mlir_module(
         fn,
@@ -525,7 +537,7 @@ def compile_to_flatbuffer(
         module_dump=module_dump,
         output_root=output_root,
     )
-
+    print("8")
     output_file_mlir = get_target_path(output_root, test_base + mlir_suffix, target)
     output_file_fbb = ".".join([output_file_mlir, target_extension])
 
@@ -542,7 +554,7 @@ def compile_to_flatbuffer(
         settings=settings,
     )
     print(f"{target} pipeline ran successfully.")
-
+    print("9")
     module_logger = MLIRModuleLogger()
     module_logger.attach_context(module.context)
 

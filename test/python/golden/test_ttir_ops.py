@@ -7,7 +7,13 @@ import torch
 from typing import Callable, List, Optional
 
 from ttir_builder import Operand, TTIRBuilder, Shape, TypeInfo
-from ttir_builder.utils import compile_to_flatbuffer, Marks, shape_str
+from ttir_builder.utils import (
+    compile_to_flatbuffer,
+    Marks,
+    shape_str,
+    settings_to_overrides,
+    OPTIMIZATION_POLICIES,
+)
 
 
 def exp(in0: Operand, builder: TTIRBuilder, unit_attrs: Optional[List[str]] = None):
@@ -742,6 +748,7 @@ def test_conv2d(
         builder: TTIRBuilder,
         unit_attrs: Optional[List[str]] = None,
     ):
+
         return builder.conv2d(
             in0,
             weight,
@@ -754,10 +761,18 @@ def test_conv2d(
             unit_attrs=unit_attrs,
         )
 
+    settings = {
+        "optimizationPolicies": list(OPTIMIZATION_POLICIES.keys()),
+    }
+    settings = {"optimizationPolicy": "Optimizer Disabled"}
+    pipeline_options = [
+        settings_to_overrides(settings, request.config.getoption("--sys-desc"))
+    ]
     compile_to_flatbuffer(
         conv2d,
         shapes,
         dtypes,
+        pipeline_options=pipeline_options,
         test_base=request.node.name,
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),

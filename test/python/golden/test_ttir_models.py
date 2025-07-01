@@ -6,8 +6,9 @@ import torch
 import pytest
 from typing import List
 
-from ttir_builder.utils import compile_to_flatbuffer
+from ttir_builder.utils import compile_to_flatbuffer, settings_to_overrides
 from ttir_builder import Operand, TTIRBuilder, Shape
+from ttmlir import optimizer_overrides
 
 
 @pytest.mark.parametrize("shapes", [[(32, 32), (32, 32), (32, 32)]], ids=["32x32"])
@@ -73,16 +74,38 @@ def test_mnist(
         add_6 = builder.add(matmul_5, in4)
         return builder.softmax(add_6, dimension=1)
 
+    print("1")
+    overrides = {
+        'loc("/home/jgrim/wh-01-src/tt-mlir/test/python/golden/test_ttir_models.py:74:id(5)")': {
+            "named_location": "matmul_1",
+            "attributes": [
+                {"key": "data_type", "value": "f32"},
+                {"key": "memory_layout", "value": "tile"},
+                {"key": "buffer_type", "value": "dram"},
+                {"key": "tensor_memory_layout", "value": "interleaved"},
+                {"key": "grid_shape", "value": "[8x8]"},
+            ],
+        }
+    }
+    print("2")
+    settings = {"optimizationPolicy": "DF Sharding", "overrides": overrides}
+    print("3")
+    pipeline_options = [
+        settings_to_overrides(settings, request.config.getoption("--sys-desc"))
+    ]
+    print(pipeline_options)
     # TODO: figure out a better way to name these tests for filename purposes
     compile_to_flatbuffer(
         model,
         shapes,
         dtypes,
+        pipeline_options=pipeline_options,
         test_base=request.node.name,
         target=target,
         output_root=request.config.getoption("path"),
         system_desc_path=request.config.getoption("--sys-desc"),
     )
+    assert False, "t"
 
 
 @pytest.mark.fails_golden
