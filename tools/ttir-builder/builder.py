@@ -279,7 +279,7 @@ class TTIRBuilder:
                     continue
                 self.id_golden_map[output_key] = Golden(tensor)
 
-    def set_output_layout_override(self, attributes: Dict[str, str]):
+    def set_output_layout_override(self, attributes: Dict[str, str], name: str):
         override_handler = optimizer_overrides.OptimizerOverridesHandler()
         output_layout_override = optimizer_overrides.OutputLayoutOverrideParams()
         for key, value in attributes.items():
@@ -300,12 +300,10 @@ class TTIRBuilder:
                     raise ValueError(f"Invalid override attribute: {key}")
 
         if not output_layout_override.empty():
-            override_handler.add_output_layout_override(
-                str(self._loc), output_layout_override
-            )
+            override_handler.add_output_layout_override(name, output_layout_override)
         self._override_params[str(self._loc)] = override_handler.to_string()
 
-    def set_conv2d_config_override(self, configs: Dict[str, str]):
+    def set_conv2d_config_override(self, configs: Dict[str, str], name: str):
         override_handler = optimizer_overrides.OptimizerOverridesHandler()
         conv2d_config_override = optimizer_overrides.Conv2dConfigOverrideParams()
 
@@ -364,9 +362,7 @@ class TTIRBuilder:
                     raise ValueError(f"Invalid override attribute: {key}")
 
         if not conv2d_config_override.empty():
-            override_handler.add_conv2d_config_override(
-                "conv2d", conv2d_config_override
-            )
+            override_handler.add_conv2d_config_override(name, conv2d_config_override)
         self._override_params[str(self._loc)] = override_handler.to_string()
 
     # ----- Private helpers -----
@@ -760,7 +756,6 @@ class TTIRBuilder:
             self.id_golden_map[str(loc)] = golden
             self._store_golden(op, golden)
             self._override_golden(output, golden)
-            print(loc)
             return op
 
     def eltwise_proxy(

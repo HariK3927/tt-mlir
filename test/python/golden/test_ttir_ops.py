@@ -784,19 +784,18 @@ def test_conv2d(
             groups=groups,
             unit_attrs=unit_attrs,
         )
-        builder.set_conv2d_config_override(conv2d_config)
+        builder.set_conv2d_config_override(conv2d_config, "x")
         return x
 
     compile_to_flatbuffer(
         conv2d,
         shapes,
         dtypes,
+        optimization_policy="Optimizer Disabled",
         test_base=request.node.name,
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),
     )
-
-    assert False, "t"
 
 
 @pytest.mark.parametrize(
