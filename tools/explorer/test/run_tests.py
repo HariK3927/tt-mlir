@@ -252,7 +252,9 @@ def test_get_emitc_cpp_code():
         timeout=300,
     )
     result = convert_command_and_assert(MNIST_SHARDING_PATH)
+    print(result)
     assert "cppCode" in result["graphs"][0]
+    assert False, "T"
 
 
 # TODO: figure out if this should be deleted, or adapted with new tests

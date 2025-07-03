@@ -764,7 +764,7 @@ def test_conv2d(
     settings = {
         "optimizationPolicies": list(OPTIMIZATION_POLICIES.keys()),
     }
-    settings = {"optimizationPolicy": "Optimizer Disabled"}
+    settings = {"optimizationPolicy": "Greedy L1 Interleaved"}
     pipeline_options = [
         settings_to_overrides(settings, request.config.getoption("--sys-desc"))
     ]
@@ -1347,7 +1347,7 @@ def test_quantize(
         test_base=request.node.name,
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),
-        pipeline_options=pipeline_options,
+        # pipeline_options=pipeline_options,
     )
 
 

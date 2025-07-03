@@ -146,7 +146,8 @@ def settings_to_overrides(settings, artifacts_dir):
                 override_handler.add_conv2d_config_override(
                     op_name_loc, conv2d_config_override
                 )
-
+    print(settings)
+    print(override_handler.to_string())
     return override_handler
 
 

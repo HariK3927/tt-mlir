@@ -215,7 +215,8 @@ def settings_to_overrides(settings, system_desc_path):
                     op_name_loc, conv2d_config_override
                 )
     print(override_handler.to_string())
-    return "enable-optimizer=true memory-layout-analysis-policy=DFSharding memreconfig-enabled=true override-output-layout=matmul_1=8x8:dram:interleaved:tile:f32 system-desc-path=ttrt-artifacts/system_desc.ttsys"
+    return override_handler.to_string()
+    # return "enable-optimizer=true memory-layout-analysis-policy=DFSharding memreconfig-enabled=true override-output-layout=matmul_1=8x8:dram:interleaved:tile:f32 system-desc-path=ttrt-artifacts/system_desc.ttsys"
 
 
 def build_mlir_module(
@@ -411,7 +412,10 @@ def run_pipeline(
     # Now, pass it through the pipeline. Module gets modified in place.
     pipeline_fn(
         module,
-        "enable-optimizer=true memory-layout-analysis-policy=DFSharding memreconfig-enabled=true",
+        # "memreconfig-enabled=true system-desc-path=/home/jgrim/wh-01-src/tt-mlir/ttrt-artifacts/system_desc.ttsys",
+        # " ".join(pipeline_options),
+        # "enable-optimizer=true"
+        "enable-optimizer=true memory-layout-analysis-policy=DFSharding memreconfig-enabled=true system-desc-path=/home/jgrim/wh-01-src/tt-mlir/ttrt-artifacts/system_desc.ttsys",
     )
 
     # Optionally dump to file.
