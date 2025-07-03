@@ -528,13 +528,9 @@ def test_prod(shape: Shape, dim_arg: int, keep_dim: bool, request):
     ):
         return builder.prod(in0, [dim_arg], keep_dim, unit_attrs=unit_attrs)
 
-    optimization_policy = "Greedy L1 Interleaved"
-    pipeline_options = []
     compile_to_flatbuffer(
         prod,
         [shape],
-        pipeline_options=pipeline_options,
-        optimization_policy=optimization_policy,
         test_base=request.node.name,
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),

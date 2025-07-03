@@ -45,7 +45,6 @@ def settings_to_overrides(settings, artifacts_dir):
 
     # Convert settings to output layout overrides.
     if settings.get("overrides"):
-        print("OVERRIDES: ", settings["overrides"])
         for op_id, overrides in settings["overrides"].items():
             op_name_loc = overrides["named_location"]
             output_layout_override = optimizer_overrides.OutputLayoutOverrideParams()
@@ -147,8 +146,7 @@ def settings_to_overrides(settings, artifacts_dir):
                 override_handler.add_conv2d_config_override(
                     op_name_loc, conv2d_config_override
                 )
-    print(settings)
-    print(override_handler.to_string())
+
     return override_handler
 
 

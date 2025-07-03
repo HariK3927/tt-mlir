@@ -34,13 +34,7 @@ OPTIMIZATION_POLICIES = {
     "Greedy L1 Interleaved": optimizer_overrides.MemoryLayoutAnalysisPolicyType.GreedyL1Interleaved,
     "BF Interleaved": optimizer_overrides.MemoryLayoutAnalysisPolicyType.BFInterleaved,
 }
-"""
-# Check that existing things in optimizer_overrides arent better
-class OptimizerOverrideOptions(Enum):
-    DFSharding = auto()  # Do not store golden.
-    GreedyL1Interleaved = auto()  # Check every single op level goldens
-    GRAPH_LEVEL = auto()  # Check graph level goldens only
-"""
+
 # Convenience class for adding pytest marks
 class Marks:
     def __init__(self, *marks):
