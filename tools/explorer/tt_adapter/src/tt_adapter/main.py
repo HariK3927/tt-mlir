@@ -45,6 +45,7 @@ def settings_to_overrides(settings, artifacts_dir):
 
     # Convert settings to output layout overrides.
     if settings.get("overrides"):
+        print("OVERRIDES: ", settings["overrides"])
         for op_id, overrides in settings["overrides"].items():
             op_name_loc = overrides["named_location"]
             output_layout_override = optimizer_overrides.OutputLayoutOverrideParams()

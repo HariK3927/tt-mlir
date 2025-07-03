@@ -56,7 +56,9 @@ def main():
     # Memory Layout Analysis Policy
     obj.set_memory_layout_analysis_policy(MemoryLayoutAnalysisPolicyType.DFSharding)
     print(f"Memory Layout Analysis Policy: {obj.get_memory_layout_analysis_policy()}")
-    obj.set_memory_layout_analysis_policy(MemoryLayoutAnalysisPolicyType.L1Interleaved)
+    obj.set_memory_layout_analysis_policy(
+        MemoryLayoutAnalysisPolicyType.GreedyL1Interleaved
+    )
     print(f"Memory Layout Analysis Policy: {obj.get_memory_layout_analysis_policy()}")
 
     # System Descriptor Path
@@ -79,9 +81,13 @@ def main():
     obj.add_insert_memreconfig("add", [1, 2])
     obj.add_insert_memreconfig("mul", [0, 1])
     obj.add_insert_memreconfig("sub", [2, 3])
-    print(f"Input Layout: {obj.get_insert_memreconfig()}\n")
-
+    # print("Input Layout: ", obj.get_insert_memreconfig())
+    # output_layout_override = optimizer_overrides.OutputLayoutOverrideParams()
+    # op_name_loc = overrides["named_location"]
+    output_layout_override = oo.OutputLayoutOverrideParams()
     # Output Layout
+    obj.add_output_layout_override("LOC", output_layout_override)
+    """
     obj.add_output_layout_override(
         "add",
         [0, 1],
@@ -106,7 +112,8 @@ def main():
         Layout.Tile,
         DataType.UInt16,
     )
-    print(f"Output Layout: {obj.get_output_layout_overrides()}\n")
+    """
+    # print("Output Layout: ", obj.get_output_layout_overrides())
 
     # ----------------------------------------------------------------------------- #
     # Test string method

@@ -11,8 +11,6 @@ from ttir_builder.utils import (
     compile_to_flatbuffer,
     Marks,
     shape_str,
-    settings_to_overrides,
-    OPTIMIZATION_POLICIES,
 )
 
 
@@ -534,9 +532,13 @@ def test_prod(shape: Shape, dim_arg: int, keep_dim: bool, request):
     ):
         return builder.prod(in0, [dim_arg], keep_dim, unit_attrs=unit_attrs)
 
+    optimization_policy = "Greedy L1 Interleaved"
+    pipeline_options = []
     compile_to_flatbuffer(
         prod,
         [shape],
+        pipeline_options=pipeline_options,
+        optimization_policy=optimization_policy,
         test_base=request.node.name,
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),
@@ -716,6 +718,29 @@ def test_concat(shapes: List[Shape], dim: int, request):
     )
 
 
+conv2d_config = {
+    "dtype": "bf16",
+    "weights_dtype": "bf16",
+    "activation": "none",
+    "deallocate_activation": "false",
+    "reallocate_halo_output": "true",
+    "act_block_h_override": "0",
+    "act_block_w_div": "1",
+    "reshard_if_not_optimal": "false",
+    "override_sharding_config": "false",
+    "shard_layout": "height_sharded",
+    "core_grid": "#ttnn.core_range_set<>",
+    "transpose_shards": "true",
+    "output_layout": "tile",
+    "preprocess_weights_on_device": "true",
+    "always_preprocess_weights": "true",
+    "enable_act_double_buffer": "false",
+    "enable_weights_double_buffer": "false",
+    "enable_split_reader": "false",
+    "enable_subblock_padding": "false",
+}
+
+
 @pytest.mark.parametrize(
     "shapes",
     [
@@ -748,8 +773,7 @@ def test_conv2d(
         builder: TTIRBuilder,
         unit_attrs: Optional[List[str]] = None,
     ):
-
-        return builder.conv2d(
+        x = builder.conv2d(
             in0,
             weight,
             bias,
@@ -760,23 +784,19 @@ def test_conv2d(
             groups=groups,
             unit_attrs=unit_attrs,
         )
+        builder.set_conv2d_config_override(conv2d_config)
+        return x
 
-    settings = {
-        "optimizationPolicies": list(OPTIMIZATION_POLICIES.keys()),
-    }
-    settings = {"optimizationPolicy": "Greedy L1 Interleaved"}
-    pipeline_options = [
-        settings_to_overrides(settings, request.config.getoption("--sys-desc"))
-    ]
     compile_to_flatbuffer(
         conv2d,
         shapes,
         dtypes,
-        pipeline_options=pipeline_options,
         test_base=request.node.name,
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),
     )
+
+    assert False, "t"
 
 
 @pytest.mark.parametrize(
@@ -1347,7 +1367,7 @@ def test_quantize(
         test_base=request.node.name,
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),
-        # pipeline_options=pipeline_options,
+        pipeline_options=pipeline_options,
     )
 
 

@@ -210,6 +210,7 @@ def test_execute_mnist_with_overrides():
         {"optimizationPolicy": "DF Sharding", "overrides": overrides},
         timeout=300,
     )
+    assert False, "test"
     convert_command_and_assert(MNIST_SHARDING_PATH)
 
 
