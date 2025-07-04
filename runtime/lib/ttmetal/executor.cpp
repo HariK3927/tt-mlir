@@ -294,6 +294,13 @@ void CQExecutor::execute(const target::metal::EnqueueProgramCommand *command,
   }
 
   for (const target::metal::CBRef *cbRef : *command->cbs()) {
+    // Current BufferDesc assumes all memrefs have associated circular buffer
+    // configurations, but DRAM buffers cannot be CBs, so skip them here
+    if (cbRef->buffer_ref()->desc()->memory_space() ==
+        target::MemorySpace::DeviceDRAM) {
+      LOG_TRACE(logger::LogRuntimeTTMetalCommand, ">>>>>>>>>>>>>>>>>>>>>>> Skipping DRAM buffer as CB <<<<<<<<<<<<<<<<<<<<<<<<");
+      continue;
+    }
     CoreRangeSet coreRangeSet =
         common::toCoreRangeSet(cbRef->buffer_ref()
                                    ->desc()
