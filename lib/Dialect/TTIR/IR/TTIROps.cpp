@@ -2227,15 +2227,15 @@ void mlir::tt::ttir::ToLayoutOp::getCanonicalizationPatterns(
   });
 
   // Back to back ToLayoutOp folding, last one wins
-  patterns.add(+[](ToLayoutOp op, mlir::PatternRewriter &rewriter) {
-    ToLayoutOp producerLayoutOp = op.getInput().getDefiningOp<ToLayoutOp>();
-    if (!producerLayoutOp) {
-      return failure();
-    }
-    rewriter.replaceOpWithNewOp<ToLayoutOp>(op, producerLayoutOp.getInput(),
-                                            op.getOutput());
-    return success();
-  });
+  //patterns.add(+[](ToLayoutOp op, mlir::PatternRewriter &rewriter) {
+  //  ToLayoutOp producerLayoutOp = op.getInput().getDefiningOp<ToLayoutOp>();
+  //  if (!producerLayoutOp) {
+  //    return failure();
+  //  }
+  //  rewriter.replaceOpWithNewOp<ToLayoutOp>(op, producerLayoutOp.getInput(),
+  //                                          op.getOutput());
+  //  return success();
+  //});
 }
 
 mlir::LogicalResult mlir::tt::ttir::ToLayoutOp::bufferize(
@@ -2409,7 +2409,7 @@ mlir::LogicalResult mlir::tt::ttir::ViewLayoutOp::verify() {
       *this, getInput().getType(), getResult().getType(),
       /*allowFormatChange - reinterpretLayout allows format change */
       getReinterpretLayout(),
-      /*allowMemorySpaceChange*/ false);
+      /*allowMemorySpaceChange*/ true);
 }
 
 void mlir::tt::ttir::ViewLayoutOp::getAsmResultNames(
