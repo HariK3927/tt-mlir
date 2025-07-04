@@ -1120,8 +1120,6 @@ static mlir::AffineMap createDramMap(::mlir::MLIRContext *context,
     gridVolumeExpr = gridVolumeExpr * gridDim;
   }
 
-  mlir::AffineExpr pageSizeExpr =
-      getAffineSymbolExpr(workerMap.getNumDims() * 2, context);
   mlir::AffineExpr baseAddressExpr =
       getAffineSymbolExpr(workerMap.getNumDims() * 2 + 1, context);
   // bgrady: in tt-metal, the number of banks used to compute dram addresses is
