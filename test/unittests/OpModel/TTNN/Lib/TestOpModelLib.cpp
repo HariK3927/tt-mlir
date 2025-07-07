@@ -84,11 +84,11 @@ protected:
           {UnaryEltwiseOpType::Cos, CosOpInterface::getOpRuntime},
           {UnaryEltwiseOpType::Reciprocal, ReciprocalOpInterface::getOpRuntime},
       };
-  std::map<
-      UnaryEltwiseOpType,
-      std::function<llvm::Expected<op_model::ttnn::OpConstraints>(
-          GridAttr, llvm::ArrayRef<int64_t>, mlir::tt::ttnn::TTNNLayoutAttr,
-          llvm::ArrayRef<int64_t>, mlir::tt::ttnn::TTNNLayoutAttr)>>
+  std::map<UnaryEltwiseOpType,
+           std::function<llvm::Expected<op_model::ttnn::OpConstraints>(
+               ttcore::GridAttr, llvm::ArrayRef<int64_t>,
+               mlir::tt::ttnn::TTNNLayoutAttr, llvm::ArrayRef<int64_t>,
+               mlir::tt::ttnn::TTNNLayoutAttr)>>
       constraintsMap = {
           {UnaryEltwiseOpType::Relu, ReluOpInterface::getOpConstraints},
           {UnaryEltwiseOpType::Sqrt, SqrtOpInterface::getOpConstraints},
@@ -247,7 +247,8 @@ class OpModelReductionParam
 protected:
   using ReductionOpConstraintsFunc =
       std::function<llvm::Expected<OpConstraints>(
-          GridAttr, llvm::ArrayRef<int64_t>, mlir::tt::ttnn::TTNNLayoutAttr,
+          ttcore::GridAttr, llvm::ArrayRef<int64_t>,
+          mlir::tt::ttnn::TTNNLayoutAttr,
           std::optional<llvm::ArrayRef<int64_t>>, bool,
           mlir::tt::ttnn::TTNNLayoutAttr)>;
 
@@ -500,7 +501,7 @@ TEST_F(OpModelTest, ToLayout) {
 
   auto constraintsExp = ToLayoutOpInterface::getOpConstraints(
       CreateWorkerGrid(), tensorShape, layoutDRAMTiled, std::nullopt,
-      layoutDRAMRowMajor, true);
+      layoutDRAMRowMajor);
   EXPECT_TRUE(static_cast<bool>(constraintsExp));
   OpConstraints &opCstr = constraintsExp.get();
   EXPECT_EQ(opCstr.cbL1PeakSize, 131072);
@@ -509,24 +510,24 @@ TEST_F(OpModelTest, ToLayout) {
   ExpectLayoutsEQ(layoutDRAMRowMajor, opCstr.outputLayout);
 
   auto runtimeExp = ToLayoutOpInterface::getOpRuntime(
-      tensorShape, layoutDRAMTiled, std::nullopt, layoutDRAMRowMajor, true);
+      tensorShape, layoutDRAMTiled, std::nullopt, layoutDRAMRowMajor);
   EXPECT_TRUE(static_cast<bool>(runtimeExp));
   EXPECT_TRUE(runtimeExp.get() > 0);
 
   constraintsExp = ToLayoutOpInterface::getOpConstraints(
       CreateWorkerGrid(), tensorShape, layoutDRAMTiled, std::nullopt,
-      layoutL1RowMajorHS, true);
+      layoutL1RowMajorHS);
   EXPECT_FALSE(static_cast<bool>(constraintsExp));
   llvm::consumeError(constraintsExp.takeError());
 
   runtimeExp = ToLayoutOpInterface::getOpRuntime(
-      tensorShape, layoutDRAMTiled, std::nullopt, layoutL1RowMajorHS, true);
+      tensorShape, layoutDRAMTiled, std::nullopt, layoutL1RowMajorHS);
   EXPECT_FALSE(static_cast<bool>(runtimeExp));
   llvm::consumeError(runtimeExp.takeError());
 
   constraintsExp = ToLayoutOpInterface::getOpConstraints(
       CreateWorkerGrid(), tensorShape, layoutDRAMTiled, std::nullopt,
-      layoutDRAMRowMajor, false);
+      layoutDRAMRowMajor);
   EXPECT_TRUE(static_cast<bool>(constraintsExp));
   opCstr = constraintsExp.get();
   EXPECT_EQ(opCstr.cbL1PeakSize, 131072);
@@ -535,7 +536,7 @@ TEST_F(OpModelTest, ToLayout) {
   ExpectLayoutsEQ(layoutDRAMRowMajor, opCstr.outputLayout);
 
   runtimeExp = ToLayoutOpInterface::getOpRuntime(
-      tensorShape, layoutDRAMTiled, std::nullopt, layoutDRAMRowMajor, false);
+      tensorShape, layoutDRAMTiled, std::nullopt, layoutDRAMRowMajor);
   EXPECT_TRUE(static_cast<bool>(runtimeExp));
   EXPECT_TRUE(runtimeExp.get() > 0);
 }
@@ -685,8 +686,8 @@ TEST_F(OpModelTest, Typecast) {
 
   auto constraintsExp = TypecastOpInterface::getOpConstraints(
       CreateWorkerGrid(), tensorShape, inputLayoutDRAMIBF16,
-      DataTypeAttr::get(&context, DataType::Float32), tensorShape,
-      inputLayoutDRAMIF32);
+      ttcore::DataTypeAttr::get(&context, ttcore::DataType::Float32),
+      tensorShape, inputLayoutDRAMIF32);
   EXPECT_TRUE(static_cast<bool>(constraintsExp));
   OpConstraints &opCstr = constraintsExp.get();
   EXPECT_EQ(opCstr.cbL1PeakSize, 12288);
@@ -695,21 +696,21 @@ TEST_F(OpModelTest, Typecast) {
 
   auto runtimeExp = TypecastOpInterface::getOpRuntime(
       tensorShape, inputLayoutDRAMIBF16,
-      DataTypeAttr::get(&context, DataType::Float32), tensorShape,
-      inputLayoutDRAMIF32);
+      ttcore::DataTypeAttr::get(&context, ttcore::DataType::Float32),
+      tensorShape, inputLayoutDRAMIF32);
   EXPECT_TRUE(static_cast<bool>(runtimeExp));
   EXPECT_TRUE(runtimeExp.get() > 0);
 
   constraintsExp = TypecastOpInterface::getOpConstraints(
       CreateWorkerGrid(), tensorShape, inputLayoutDRAMIBF16,
-      DataTypeAttr::get(&context, DataType::Float32), tensorShape,
-      inputLayoutL1HSBF16);
+      ttcore::DataTypeAttr::get(&context, ttcore::DataType::Float32),
+      tensorShape, inputLayoutL1HSBF16);
   EXPECT_FALSE(static_cast<bool>(constraintsExp));
   llvm::consumeError(constraintsExp.takeError());
   runtimeExp = TypecastOpInterface::getOpRuntime(
       tensorShape, inputLayoutDRAMIBF16,
-      DataTypeAttr::get(&context, DataType::Float32), tensorShape,
-      inputLayoutL1HSBF16);
+      ttcore::DataTypeAttr::get(&context, ttcore::DataType::Float32),
+      tensorShape, inputLayoutL1HSBF16);
   EXPECT_FALSE(static_cast<bool>(runtimeExp));
   llvm::consumeError(runtimeExp.takeError());
 }
@@ -738,12 +739,12 @@ protected:
           {BinaryEltwiseOpType::Minimum, MinimumOpInterface::getOpRuntime},
       };
 
-  std::map<
-      BinaryEltwiseOpType,
-      std::function<llvm::Expected<OpConstraints>(
-          GridAttr, llvm::ArrayRef<int64_t>, mlir::tt::ttnn::TTNNLayoutAttr,
-          llvm::ArrayRef<int64_t>, mlir::tt::ttnn::TTNNLayoutAttr,
-          llvm::ArrayRef<int64_t>, mlir::tt::ttnn::TTNNLayoutAttr)>>
+  std::map<BinaryEltwiseOpType,
+           std::function<llvm::Expected<OpConstraints>(
+               ttcore::GridAttr, llvm::ArrayRef<int64_t>,
+               mlir::tt::ttnn::TTNNLayoutAttr, llvm::ArrayRef<int64_t>,
+               mlir::tt::ttnn::TTNNLayoutAttr, llvm::ArrayRef<int64_t>,
+               mlir::tt::ttnn::TTNNLayoutAttr)>>
       constraintsMap = {
           {BinaryEltwiseOpType::Add, AddOpInterface::getOpConstraints},
           {BinaryEltwiseOpType::Mul, MultiplyOpInterface::getOpConstraints},
@@ -1288,6 +1289,9 @@ class OpModelConvTranspose2dParam
                      detail::ExpectedResult>> {};
 
 TEST_P(OpModelConvTranspose2dParam, ConvTranspose2d) {
+  // Skipped due to hang. See https://github.com/tenstorrent/tt-mlir/issues/3970
+  GTEST_SKIP();
+
   auto params = GetParam();
   const auto [inputShape, inputTensorLayout, inputBufferType,
               inputVirtualGrid] = std::get<0>(params);

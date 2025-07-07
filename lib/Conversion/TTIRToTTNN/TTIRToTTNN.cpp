@@ -55,8 +55,9 @@ public:
     ttnn::ShapeAttr shapeAttr = ttnn::ShapeAttr::get(
         rewriter.getContext(),
         mlir::cast<RankedTensorType>(op->getResult(0).getType()).getShape());
-    DataType dtype = layoutAttr.getDataType();
-    DataTypeAttr dTypeAttr = DataTypeAttr::get(rewriter.getContext(), dtype);
+    ttcore::DataType dtype = layoutAttr.getDataType();
+    ttcore::DataTypeAttr dTypeAttr =
+        ttcore::DataTypeAttr::get(rewriter.getContext(), dtype);
 
     ttnn::Layout ttnnLayoutEnum = ttnn::Layout::RowMajor;
 
@@ -126,8 +127,8 @@ public:
 
     // Get data type, tensor layout, device and memory config
     //
-    DataTypeAttr dTypeAttr =
-        DataTypeAttr::get(rewriter.getContext(), layoutAttr.getDataType());
+    ttcore::DataTypeAttr dTypeAttr = ttcore::DataTypeAttr::get(
+        rewriter.getContext(), layoutAttr.getDataType());
     ttnn::BufferType bufferType = layoutAttr.getBufferType();
     ttnn::LayoutAttr tensorLayoutAttr =
         ttnn::LayoutAttr::get(op.getContext(), layoutAttr.getLayout());
@@ -208,16 +209,14 @@ public:
             .getEncoding());
 
     // Determine the output data type
-    DataType dtype = outputLayoutAttr.getDataType();
-    DataTypeAttr outputDataType =
-        DataTypeAttr::get(rewriter.getContext(), dtype);
+    ttcore::DataType dtype = outputLayoutAttr.getDataType();
+    ttcore::DataTypeAttr outputDataType =
+        ttcore::DataTypeAttr::get(rewriter.getContext(), dtype);
 
     // Determine the output layout (tile or row major)
     ttnn::BufferType outputBufferType = outputLayoutAttr.getBufferType();
 
     ttnn::Layout outputLayoutEnum = outputLayoutAttr.getLayout();
-
-    bool isOutputOnHost = (outputBufferType == ttnn::BufferType::SystemMemory);
 
     RankedTensorType result = mlir::cast<RankedTensorType>(op.getType(0));
 
@@ -231,10 +230,7 @@ public:
 
     rewriter.replaceOpWithNewOp<ttnn::ToLayoutOp>(
         op, this->getTypeConverter()->convertType(result), adaptor.getInput(),
-        outputLayout, outputDataType, outputMemConfigAttr,
-        isOutputOnHost
-            ? nullptr
-            : mlir::Value(::ttnn::utils::getOrInsertDevice(rewriter, op)));
+        outputLayout, outputDataType, outputMemConfigAttr);
 
     return success();
   }
@@ -282,10 +278,7 @@ public:
 
     rewriter.replaceOpWithNewOp<TTNNOpTy>(
         op, this->getTypeConverter()->convertType(op.getResult().getType()),
-        adaptor.getLhs(), adaptor.getRhs(),
-        tt::ttir_to_ttnn::utils::getDataTypeAttrFromTensorLayout(
-            op.getResult().getType(), rewriter),
-        nullptr);
+        adaptor.getLhs(), adaptor.getRhs());
     return success();
   }
 };
@@ -433,8 +426,8 @@ public:
         op.getResult().getType().getEncoding());
 
     // Get data type, tensor layout, buffer type and memory config.
-    DataTypeAttr dTypeAttr =
-        DataTypeAttr::get(rewriter.getContext(), layoutAttr.getDataType());
+    ttcore::DataTypeAttr dTypeAttr = ttcore::DataTypeAttr::get(
+        rewriter.getContext(), layoutAttr.getDataType());
     ttnn::TensorMemoryLayoutAttr memLayout = layoutAttr.getMemLayout();
     ttnn::BufferType bufferType = layoutAttr.getBufferType();
 
@@ -1227,7 +1220,7 @@ public:
     auto resultType = op.getType();
     ttnn::TTNNLayoutAttr outputLayoutAttr =
         mlir::cast<ttnn::TTNNLayoutAttr>(resultType.getEncoding());
-    DataType outputDataType = outputLayoutAttr.getDataType();
+    ttcore::DataType outputDataType = outputLayoutAttr.getDataType();
 
     rewriter.replaceOpWithNewOp<ttnn::TypecastOp>(
         op, this->getTypeConverter()->convertType(resultType),
@@ -1253,10 +1246,7 @@ public:
     Type outputType = this->getTypeConverter()->convertType(srcOp.getType());
     if (lhsType.getShape() == rhsType.getShape()) {
       rewriter.replaceOpWithNewOp<ttnn::SubtractOp>(
-          srcOp, outputType, adaptor.getLhs(), adaptor.getRhs(),
-          tt::ttir_to_ttnn::utils::getDataTypeAttrFromTensorLayout(
-              srcOp.getResult().getType(), rewriter),
-          nullptr);
+          srcOp, outputType, adaptor.getLhs(), adaptor.getRhs());
 
       // Broadcast for rhs operand require the operation to be commutative to
       // allow switching the order of operands. To allow this conversion, the
@@ -1404,8 +1394,8 @@ public:
     ttnn::TTNNLayoutAttr layoutAttr =
         mlir::cast<ttnn::TTNNLayoutAttr>(outputType.getEncoding());
 
-    DataTypeAttr dtypeAttr = rewriter.getAttr<DataTypeAttr>(
-        elementTypeToDataType(outputType.getElementType()));
+    ttcore::DataTypeAttr dtypeAttr = rewriter.getAttr<ttcore::DataTypeAttr>(
+        ttcore::elementTypeToDataType(outputType.getElementType()));
     Value device = mlir::tt::ttnn::utils::getOrInsertDevice(rewriter, op);
 
     ttnn::MemoryConfigAttr memConfigAttr =
@@ -1499,14 +1489,14 @@ public:
 } // namespace
 
 // Utility function to get data type for quantized types.
-static DataTypeAttr getDataType(mlir::Value val,
-                                ConversionPatternRewriter &rewriter,
-                                const TypeConverter *typeConverter) {
+static ttcore::DataTypeAttr getDataType(mlir::Value val,
+                                        ConversionPatternRewriter &rewriter,
+                                        const TypeConverter *typeConverter) {
   ttnn::TTNNLayoutAttr outputLayoutAttr = mlir::cast<ttnn::TTNNLayoutAttr>(
       mlir::cast<RankedTensorType>(typeConverter->convertType(val.getType()))
           .getEncoding());
-  DataType dtype = outputLayoutAttr.getDataType();
-  return DataTypeAttr::get(rewriter.getContext(), dtype);
+  ttcore::DataType dtype = outputLayoutAttr.getDataType();
+  return ttcore::DataTypeAttr::get(rewriter.getContext(), dtype);
 }
 
 namespace {
@@ -1518,7 +1508,7 @@ public:
   LogicalResult
   matchAndRewrite(OpTy op, typename OpTy::Adaptor adaptor,
                   ConversionPatternRewriter &rewriter) const final {
-    DataTypeAttr outputDataType =
+    ttcore::DataTypeAttr outputDataType =
         getDataType(op.getResult(), rewriter, this->getTypeConverter());
 
     rewriter.replaceOpWithNewOp<TTNNOpTy>(
@@ -1538,7 +1528,7 @@ public:
   LogicalResult
   matchAndRewrite(ttir::RequantizeUnrolledOp op, OpAdaptor adaptor,
                   ConversionPatternRewriter &rewriter) const override {
-    DataTypeAttr outputDataType =
+    ttcore::DataTypeAttr outputDataType =
         getDataType(op.getResult(), rewriter, this->getTypeConverter());
 
     rewriter.replaceOpWithNewOp<ttnn::RequantizeOp>(
