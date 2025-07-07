@@ -8,7 +8,7 @@ import inspect
 from dataclasses import dataclass
 from typing import List, Optional, Union, Tuple, Callable, Dict, Any
 from ttmlir.ir import *
-from ttmlir.dialects import ttir, ttcore, tensor, quant
+from ttmlir.dialects import ttir, ttcore, tensor, quant, stablehlo
 from ttmlir.passes import GoldenTensor, DataType
 import torch
 from enum import Enum, auto
@@ -26,6 +26,19 @@ Shape = Union[List[int], Tuple[int, ...]]
 def autodoc_skip(func):
     func.__autodoc_skip__ = True
     return func
+
+
+class ModuleDialect(Enum):
+    """
+    Enum for available dialects used in modules.
+
+    Named like this to avoid collision with builtin `Dialect`.
+    """
+
+    STABLE_HLO = "stablehlo"
+    TTIR = "ttir"
+    TTNN = "ttnn"
+    TT = "tt"
 
 
 class TTIRBuilderOps:
@@ -277,7 +290,12 @@ class TTIRBuilderOps:
         """
         return self.eltwise_proxy(torch.abs, ttir.AbsOp, [in0], unit_attrs)
 
-    def cbrt(self, in0: Operand, unit_attrs: Optional[List[str]] = None) -> OpView:
+    def cbrt(
+        self,
+        in0: Operand,
+        unit_attrs: Optional[List[str]] = None,
+        dialect: str = "ttir",
+    ) -> OpView:
         """
         Creates ``ttir.cbrt``.
 
@@ -311,12 +329,19 @@ class TTIRBuilderOps:
         golden = self._get_golden_tensor(in0)
         golden_sign = torch.sign(golden)
         golden_cbrt = torch.pow(torch.abs(golden), 1 / 3)
+        if dialect == "stablehlo":
+            fn = stablehlo.CbrtOp
+            organize_op_args = lambda i, o, _: (i[0],)
+        else:
+            fn = ttir.CbrtOp
+            organize_op_args = None
         return self.op_proxy(
             torch.mul,
-            ttir.CbrtOp,
+            fn,
             [in0],
             golden_kwargs={"input": golden_sign, "other": golden_cbrt},
             organize_golden_args=lambda i: 0,
+            organize_ttir_args=organize_op_args,
             unit_attrs=unit_attrs,
         )
 
