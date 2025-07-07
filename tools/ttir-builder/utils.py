@@ -293,10 +293,7 @@ def run_pipeline(
         pipeline_options.append(overrides)
 
     # Now, pass it through the pipeline. Module gets modified in place.
-    pipeline_fn(
-        module,
-        " ".join(pipeline_options),
-    )
+    pipeline_fn(module, " ".join(pipeline_options))
 
     # Optionally dump to file.
     if dump_to_file:
@@ -377,6 +374,7 @@ def compile_to_flatbuffer(
         Set to `True` to print IR to stdout.  Set to dir path to print IR after
         each pass to its own file under _this_ directory.
     """
+
     if inputs_types is not None:
         assert len(inputs_shapes) == len(inputs_types)
 
