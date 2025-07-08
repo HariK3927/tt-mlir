@@ -141,6 +141,9 @@ public:
         } else {
           coalescingFactor =
               std::gcd(coalescingFactor, currentCoalescingFactor);
+
+          // assume next memory access can be coalesced
+          currentCoalescingFactor = 1;
         }
         nextAddress = address;
         nextAddress.back() += elemSizeBytes;
@@ -150,8 +153,16 @@ public:
   }
 
   static std::tuple<SmallVector<Value>, SmallVector<Value>, SmallVector<Value>>
-  getLoopBounds(OpBuilder &builder, Location loc,
-                ArrayRef<int64_t> shardShape) {
+  getLoopBounds(OpBuilder &builder, Location loc, ArrayRef<int64_t> shardShape,
+                size_t coalescingFactor) {
+
+    // A valid coalescing factor must be less or equal to the total shard volume
+    // and divide the volume evenly
+    size_t shardVolume = ttmlir::utils::volume(shardShape);
+    assert(shardVolume >= coalescingFactor);
+    assert(shardVolume % coalescingFactor == 0);
+
+    // Loop bounds are determined by shard shape
     Value zero = builder.create<arith::ConstantOp>(loc, builder.getIndexType(),
                                                    builder.getIndexAttr(0));
     Value one = builder.create<arith::ConstantOp>(loc, builder.getIndexType(),
@@ -161,15 +172,59 @@ public:
       return builder.create<arith::ConstantOp>(loc, builder.getIndexType(),
                                                builder.getIndexAttr(dim));
     }));
+
+    //--- Determine step sizes implied by coalescing factor ---
     SmallVector<Value> step(shardShape.size(), one);
+
+    if (shardShape.size() != 2) {
+      llvm::errs() << "Optimized coalescing loops only supported for D shard shapes; defaulting to single-element gathers\n"; 
+      return std::make_tuple(lbs, ubs, step);
+    }
+
+    size_t outer_loop_bound_size = shardShape[0];
+    size_t inner_loop_bound_size = shardShape[1];
+
+    bool coalesced_gather_fits_in_inner_loop =
+        (inner_loop_bound_size >= coalescingFactor) &&
+        (inner_loop_bound_size % coalescingFactor == 0);
+    if (coalesced_gather_fits_in_inner_loop) {
+      // CASE I - coalesced gather fits neatly in inner loop
+      auto num_inner_loop_steps = inner_loop_bound_size / coalescingFactor;
+      auto inner_loop_step_size = inner_loop_bound_size / num_inner_loop_steps;
+      
+      assert(num_inner_loop_steps * coalescingFactor == inner_loop_bound_size);
+      assert(inner_loop_step_size * num_inner_loop_steps == inner_loop_bound_size);
+
+      step[0] = one;
+      step[1] = builder.create<arith::ConstantOp>(
+          loc, builder.getIndexType(),
+          builder.getIndexAttr(inner_loop_step_size));
+    } else {
+      // CASE II - coalesced gather fits neatly in outer loop; inner loop step
+      // size is equal to inner bounds (flattened completely)
+      auto num_outer_loop_steps = shardVolume / coalescingFactor;
+      auto outer_loop_step_size = outer_loop_bound_size / num_outer_loop_steps;
+
+      assert(coalescingFactor % inner_loop_bound_size == 0);
+      assert(num_outer_loop_steps * coalescingFactor == shardVolume);
+      assert(outer_loop_step_size * num_outer_loop_steps == outer_loop_bound_size);
+
+      step[0] = builder.create<arith::ConstantOp>(
+          loc, builder.getIndexType(),
+          builder.getIndexAttr(outer_loop_step_size));
+      step[1] = builder.create<arith::ConstantOp>(
+          loc, builder.getIndexType(),
+          builder.getIndexAttr(inner_loop_bound_size));
+    }
+
     return std::make_tuple(lbs, ubs, step);
   }
 
   static scf::LoopNest
   fallbackSingleTileGatherLoop(OpBuilder &builder, Location loc, DMAOp dma,
                                ArrayRef<Value> streamIndex,
-                               ArrayRef<int64_t> shardShape) {
-    auto [lbs, ubs, steps] = getLoopBounds(builder, loc, shardShape);
+                               ArrayRef<int64_t> shardShape, size_t coalescingFactor) {
+    auto [lbs, ubs, steps] = getLoopBounds(builder, loc, shardShape, coalescingFactor);
 
     auto initTx = builder.create<ttir::NullTxOp>(dma.getLoc());
     scf::LoopNest loopNest = scf::buildLoopNest(
@@ -178,9 +233,8 @@ public:
             ValueRange /*args*/) {
           SmallVector<Value> srcIndex =
               llvm::to_vector(llvm::concat<Value>(streamIndex, iters));
-          return SmallVector<Value>{builder.create<ttir::DMAOp>(
-              dma.getLoc(), dma.getSrc(), srcIndex, dma.getDst(), iters,
-              dma.getMcastStartIndex(), dma.getMcastShape())};
+
+          return SmallVector<Value>{builder.create<ttir::DMAOp>(dma.getLoc(), dma.getSrc(), srcIndex, dma.getDst(), iters, coalescingFactor)};
         });
     return loopNest;
   }
@@ -237,8 +291,8 @@ public:
       // Fallback to single tile gather for now, in the future we can chage this
       // to support more sophisticated gathering.
       scf::LoopNest loopNest = fallbackSingleTileGatherLoop(
-          rewriter, dma.getLoc(), dma, streamIndex, memrefShardShape);
-      assert(loopNest.loops.size() == memrefShardShape.size());
+          rewriter, dma.getLoc(), dma, streamIndex, memrefShardShape, coalescingFactor);
+      //assert(loopNest.loops.size() == memrefShardShape.size());
       newDma = loopNest.loops.front();
     }
 
@@ -291,7 +345,7 @@ public:
         dma, dma.getResult().getType(), dma.getSrc(), nullptr, srcIndices,
         dma.getDst(), nullptr, dstIndices,
         rewriter.getI64IntegerAttr(dma.getNumElems()), dma.getMcastStartIndex(),
-        dma.getMcastShape());
+        dma.getMcastShape(), rewriter.getBoolAttr(true));
 
     return success();
   }
