@@ -22,6 +22,7 @@ set(TTNN_OPS_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/creation/full.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/creation/full_with.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/data_movement/concat.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/data_movement/copy_host_to_device_tensor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/data_movement/pad.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/data_movement/permute.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/data_movement/repeat.cpp
@@ -49,6 +50,7 @@ set(TTNN_OPS_SRCS
   # ANCHOR: adding_an_op_matmul_runtime_cmake
   ${CMAKE_CURRENT_SOURCE_DIR}/matmul/matmul.cpp
   # ANCHOR_END: adding_an_op_matmul_runtime_cmake
+  ${CMAKE_CURRENT_SOURCE_DIR}/mlir_native/func_call.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/moreh/moreh_cumsum.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/normalization/batch_norm.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/normalization/softmax.cpp
@@ -58,7 +60,10 @@ set(TTNN_OPS_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/reduction/prod.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/reduction/reduction.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/reduction/sort.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/trace/trace.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/trace/begin_trace_capture.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/trace/capture_or_execute_trace.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/trace/end_trace_capture.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/trace/execute_trace.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/utils/utils.cpp
 )
 
