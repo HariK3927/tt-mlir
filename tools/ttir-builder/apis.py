@@ -7,6 +7,7 @@ from __future__ import annotations
 import inspect
 from dataclasses import dataclass
 from typing import List, Optional, Union, Tuple, Callable, Dict, Any
+from ttmlir import optimizer_overrides
 from ttmlir.ir import *
 from ttmlir.dialects import ttir, ttcore, tensor, quant
 from ttmlir.passes import GoldenTensor, DataType
@@ -167,6 +168,9 @@ class TTIRBuilder(TTIRBuilderOps):
 
         # golden check level
         self._golden_check_level = GoldenCheckLevel.OP_LEVEL
+
+        # override parameters
+        self._override_params = {}
 
     # ----- Public helpers -----
 
@@ -405,7 +409,7 @@ class TTIRBuilder(TTIRBuilderOps):
                     raise ValueError(f"Invalid override attribute: {key}")
 
         if not output_layout_override.empty():
-            override_handler.add_output_layout_override(name, output_layout_override)
+            override_handler.add_output_layout_override(op_name, output_layout_override)
         self._override_params[str(self._loc)] = override_handler.to_string()
 
     def set_conv2d_config_override(self, configs: Dict[str, str], op_name: str):
@@ -447,12 +451,12 @@ class TTIRBuilder(TTIRBuilderOps):
                     conv2d_config_override.set_transpose_shards_from_str(value)
                 case "output_layout":
                     conv2d_config_override.set_output_layout_from_str(value)
-                case "preprocess_weights_on_device":
-                    conv2d_config_override.set_preprocess_weights_on_device_from_str(
-                        value
-                    )
-                case "always_preprocess_weights":
-                    conv2d_config_override.set_always_preprocess_weights_from_str(value)
+                # case "preprocess_weights_on_device":
+                #    conv2d_config_override.set_preprocess_weights_on_device_from_str(
+                #        value
+                #    )
+                # case "always_preprocess_weights":
+                #    conv2d_config_override.set_always_preprocess_weights_from_str(value)
                 case "enable_act_double_buffer":
                     conv2d_config_override.set_enable_act_double_buffer_from_str(value)
                 case "enable_weights_double_buffer":
@@ -467,7 +471,7 @@ class TTIRBuilder(TTIRBuilderOps):
                     raise ValueError(f"Invalid override attribute: {key}")
 
         if not conv2d_config_override.empty():
-            override_handler.add_conv2d_config_override(name, conv2d_config_override)
+            override_handler.add_conv2d_config_override(op_name, conv2d_config_override)
         self._override_params[str(self._loc)] = override_handler.to_string()
 
     # ----- Private helpers -----
@@ -578,6 +582,16 @@ class TTIRBuilder(TTIRBuilderOps):
         return typ
 
     # ----- Utility Conversion ----
+
+    @autodoc_skip
+    def _get_overrides(self) -> List[str]:
+        """
+        Returns a list of strings of overrides
+        """
+        params = []
+        for key, value in self._override_params.items():
+            params.append(value)
+        return params
 
     @autodoc_skip
     def get_datatype_from_torch_dtype(self, dtype: torch.dtype) -> DataType:

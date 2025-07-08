@@ -4,8 +4,9 @@
 
 import pytest
 import torch
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Dict
 
+from ttmlir import optimizer_overrides
 from ttir_builder import Operand, TTIRBuilder, Shape, TypeInfo
 from ttir_builder.utils import compile_to_flatbuffer, Marks, shape_str
 
@@ -842,8 +843,6 @@ conv2d_config = {
     "core_grid": "#ttnn.core_range_set<>",
     "transpose_shards": "true",
     "output_layout": "tile",
-    "preprocess_weights_on_device": "true",
-    "always_preprocess_weights": "true",
     "enable_act_double_buffer": "false",
     "enable_weights_double_buffer": "false",
     "enable_split_reader": "false",
@@ -866,7 +865,6 @@ conv2d_config = {
 @pytest.mark.parametrize(
     "stride,padding,dilation,groups", [([2, 1], [2, 1], [2, 1], 2)]
 )
-@pytest.mark.parametrize("dtypes", [[torch.float32] * 4])
 @pytest.mark.parametrize("config", [{}, conv2d_config])
 def test_conv2d(
     shapes: List[Shape],
