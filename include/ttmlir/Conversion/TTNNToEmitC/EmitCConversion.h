@@ -1215,6 +1215,18 @@ inline std::string convert(ttnn::MemoryConfigAttr attr) {
   return buf;
 }
 
+inline std::string convert(ttnn::MeshCoordinateAttr attr) {
+  std::string buf;
+  llvm::raw_string_ostream rso(buf);
+
+  auto coords = attr.getCoords();
+  rso << "::ttnn::MeshCoordinate(ttsl::Span<const uint32_t>{";
+  llvm::interleaveComma(coords, rso);
+  rso << "})";
+
+  return buf;
+}
+
 template <typename T>
 struct IsMLIRType {
   static constexpr bool value = std::is_convertible_v<T, mlir::Attribute> ||
@@ -1267,6 +1279,10 @@ public:
 
   mlir::Attribute emit(tt::ttnn::MemoryConfigAttr attr) {
     return rewriter.getType<emitc::OpaqueAttr>(convert(attr));
+  }
+
+  mlir::Attribute emit(tt::ttnn::MeshCoordinateAttr attr) {
+    return rewriter.getAttr<emitc::OpaqueAttr>(convert(attr));
   }
 
   template <typename TargetTy = void, typename SourceTy>
