@@ -639,4 +639,14 @@ def TTNN_TTNNLayoutAttr: TTNN_Attr<"TTNNLayout", "ttnn_layout"> {
   let genVerifyDecl = 1;
 }
 
+def TTNN_MeshCoordinateAttr : TTNN_Attr<"MeshCoordinate", "mesh_coordinate"> {
+  let summary = "TTNN MeshCoordinate attribute";
+  let description = [{
+    TTNN MeshCoordinate attribute
+  }];
+
+  let parameters = (ins ArrayRefParameter<"int64_t">:$coords);
+  let assemblyFormat = "`<` custom<DimensionList>($coords) `>`";
+}
+
 #endif  // TTMLIR_TTMLIR_DIALECT_TTNN_TTNNOPSATTRS_TD

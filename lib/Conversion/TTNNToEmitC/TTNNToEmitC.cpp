@@ -2235,8 +2235,8 @@ public:
         srcOp, adaptor, rewriter);
     llvm::SmallVector<mlir::Attribute> args{
         emitter.emit(srcOp.getInput()),
-        emitter.emit(srcOp.getSenderId()),
-        emitter.emit(srcOp.getReceiverId()),
+        emitter.emit(srcOp.getSendCoord()),
+        emitter.emit(srcOp.getReceiveCoord()),
         emitter.emit(srcOp.getAccumTensor()),
     };
     emitter.replaceOp(*this, args);

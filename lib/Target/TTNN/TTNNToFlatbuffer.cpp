@@ -946,8 +946,14 @@ createOp(FlatbufferObjectCache &cache, PointToPointOp op) {
       getOperandThroughDPSOps(op.getInput()));
   auto output = cache.getOrCreate(op.getResult(), tensorValueToFlatbuffer,
                                   kHostAllocatedSize);
-  auto senderId = op.getSenderId();
-  auto receiverId = op.getReceiverId();
+
+  auto sendVec =
+      cache.fbb->CreateVector<int64_t>(op.getSendCoordAttr().getCoords());
+  auto recvVec =
+      cache.fbb->CreateVector<int64_t>(op.getReceiveCoordAttr().getCoords());
+
+  auto sendCoordFB = ::tt::target::CreateMeshCoordinate(*cache.fbb, sendVec);
+  auto receiveCoordFB = ::tt::target::CreateMeshCoordinate(*cache.fbb, recvVec);
 
   ::flatbuffers::Offset<::tt::target::ttnn::TensorRef> accumTensor = 0;
   if (op.getAccumTensor()) {
@@ -956,7 +962,7 @@ createOp(FlatbufferObjectCache &cache, PointToPointOp op) {
   }
 
   return ::tt::target::ttnn::CreatePointToPointOp(
-      *cache.fbb, input, output, senderId, receiverId, accumTensor);
+      *cache.fbb, input, output, sendCoordFB, receiveCoordFB, accumTensor);
 }
 
 template <typename EltwiseBinaryOp>
