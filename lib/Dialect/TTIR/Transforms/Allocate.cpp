@@ -353,7 +353,7 @@ class TTIRAllocate final : public impl::TTIRAllocateBase<TTIRAllocate> {
         MemorySpace memorySpace = getMemorySpace(
             memrefTy, MemorySpace::System); // Interpret unset as "host memory".
 
-        if (!isL1MemorySpace(memorySpace)) {
+        if (!isDeviceMemorySpace(memorySpace)) {
           continue; // Only handling L1 space at the moment.
         }
 
@@ -427,7 +427,7 @@ class TTIRAllocate final : public impl::TTIRAllocateBase<TTIRAllocate> {
       MemorySpace memorySpace = getMemorySpace(
           memrefTy, MemorySpace::System); // Interpret unset as "host memory".
 
-      if (!isL1MemorySpace(memorySpace)) {
+      if (!isDeviceMemorySpace(memorySpace)) {
         continue; // Only handling L1 space at the moment.
       }
 
