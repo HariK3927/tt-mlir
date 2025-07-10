@@ -628,7 +628,7 @@ public:
         auto dstL1Addr = buildL1Address<ttkernel::GetWritePtrOp>(
             rewriter, op.getLoc(), adaptor.getDst(), op.getDstIndices());
         auto nocAddr = buildDramNocAddress(
-            rewriter, op.getLoc(), adaptor.getSrc(), op.getSrcIndices(), false);
+            rewriter, op.getLoc(), adaptor.getSrc(), op.getSrcIndices());
         auto size = i32(rewriter, op->getLoc(), op.getSizeBytes());
         rewriter.create<ttkernel::NocAsyncReadOp>(op.getLoc(), nocAddr,
                                                   dstL1Addr, size);
@@ -637,7 +637,7 @@ public:
         auto srcL1Addr = buildL1Address<ttkernel::GetReadPtrOp>(
             rewriter, op.getLoc(), adaptor.getSrc(), op.getSrcIndices());
         auto dstNocAddr = buildDramNocAddress(
-            rewriter, op.getLoc(), adaptor.getDst(), op.getDstIndices(), true);
+            rewriter, op.getLoc(), adaptor.getDst(), op.getDstIndices());
         auto size = i32(rewriter, op->getLoc(), op.getSizeBytes());
         rewriter.create<ttkernel::NocAsyncWriteOp>(op.getLoc(), srcL1Addr,
                                                    dstNocAddr, size);
