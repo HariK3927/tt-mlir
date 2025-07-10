@@ -619,20 +619,29 @@ public:
     assert(chipIds.size() == 1);
     auto chipDesc = systemDesc.getChipDesc(chipIds[0]);
 
-
+    bool isDramDma = op.isSrcDeviceDram() || op.isDstDeviceDram();
     bool isRead = false;
-    if (op.isSrcDeviceDram()) {
-      assert(op.isSrcRemote() && op.isDstLocal());
+    if (isDramDma) {
+      isRead = op.isSrcDeviceDram() && op.isDstDeviceL1();
+      if (isRead) {
 
-      auto dstL1Addr = buildL1Address<ttkernel::GetWritePtrOp>(
-          rewriter, op.getLoc(), adaptor.getDst(), op.getDstIndices());
-      auto nocAddr = buildDramNocAddress(rewriter, op.getLoc(),
-                                         adaptor.getSrc(), op.getSrcIndices());
-      auto size = i32(rewriter, op->getLoc(), op.getSizeBytes());
-      rewriter.create<ttkernel::NocAsyncReadOp>(op.getLoc(), nocAddr, dstL1Addr,
-                                                size);
-      isRead = true;
-
+        auto dstL1Addr = buildL1Address<ttkernel::GetWritePtrOp>(
+            rewriter, op.getLoc(), adaptor.getDst(), op.getDstIndices());
+        auto nocAddr = buildDramNocAddress(
+            rewriter, op.getLoc(), adaptor.getSrc(), op.getSrcIndices(), false);
+        auto size = i32(rewriter, op->getLoc(), op.getSizeBytes());
+        rewriter.create<ttkernel::NocAsyncReadOp>(op.getLoc(), nocAddr,
+                                                  dstL1Addr, size);
+      } else {
+        assert(op.isSrcDeviceL1() && op.isDstDeviceDram());
+        auto srcL1Addr = buildL1Address<ttkernel::GetReadPtrOp>(
+            rewriter, op.getLoc(), adaptor.getSrc(), op.getSrcIndices());
+        auto dstNocAddr = buildDramNocAddress(
+            rewriter, op.getLoc(), adaptor.getDst(), op.getDstIndices(), true);
+        auto size = i32(rewriter, op->getLoc(), op.getSizeBytes());
+        rewriter.create<ttkernel::NocAsyncWriteOp>(op.getLoc(), srcL1Addr,
+                                                   dstNocAddr, size);
+      }
     } else if (op.isSrcLocal() && op.isDstLocal()) {
       // Local to Local Datamovement & Multicast
 
