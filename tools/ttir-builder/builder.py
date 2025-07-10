@@ -482,6 +482,7 @@ class TTIRBuilder:
         tilize=False,
         oobVal=ttcore.OOBVal.Undef,
         memorySpace=ttcore.MemorySpace.DeviceL1,
+        elemType: Optional[Type] = None,
     ):
         ctx = self._ctx
 
@@ -493,9 +494,10 @@ class TTIRBuilder:
         extended_shape = [1] * original_rank + list(shape)
 
         elemType = F32Type.get(ctx)
-
+        
+        dtype = elemType if elemType is not None else ttcore.DataType.Float32
         if tilize:
-            elemType = ttcore.ir.TileType.get(ctx, 32, 32, ttcore.DataType.Float32)
+            elemType = ttcore.ir.TileType.get(ctx, 32, 32, dtype)
             extended_shape[-2] //= 32
             extended_shape[-1] //= 32
 
