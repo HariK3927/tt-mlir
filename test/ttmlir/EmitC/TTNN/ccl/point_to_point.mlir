@@ -1,5 +1,6 @@
 // RUN: ttmlir-opt --ttcore-register-device="system-desc-path=%system_desc_path% mesh-shape=1,8" %s > %t.ttnn.mlir
-// RUN: ttmlir-translate --ttnn-to-flatbuffer %t.ttnn.mlir > %t.ttnn
+// RUN: ttmlir-opt --convert-ttnn-to-emitc %t.ttnn.mlir > %t.emitc.mlir
+// RUN: ttmlir-translate --mlir-to-cpp --allow-unregistered-dialect %t.emitc.mlir > %basename_t.cpp
 #dram = #ttnn.buffer_type<dram>
 #system_memory = #ttnn.buffer_type<system_memory>
 #ttnn_layout1 = #ttnn.ttnn_layout<(d0, d1, d2, d3) -> (d0 * 256 + d1 * 256 + d2, d3), <1x1>, memref<256x512xf32, #system_memory>>
