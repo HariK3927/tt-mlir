@@ -38,6 +38,7 @@
 #include "tt-metalium/bfloat16.hpp"
 #include "ttnn/core.hpp"
 #include "ttnn/device.hpp"
+#include "ttnn/distributed/api.hpp"
 #include "ttnn/operations/copy/typecast/typecast.hpp"
 #include "ttnn/tensor/tensor.hpp"
 #include "ttnn/tensor/types.hpp"
@@ -68,8 +69,20 @@ public:
       return externalDevice;
     }
 
+    // static std::shared_ptr<ttnn::MeshDevice> ownedInstance =
+    // ::ttnn::MeshDevice::create_unit_mesh(0, l1SmallSize);
+
+    ttnn::MeshShape shape(1, 8);
+    size_t l1SmallSize = DEFAULT_L1_SMALL_SIZE;
+    size_t traceRegionSize = DEFAULT_TRACE_REGION_SIZE;
+    ::tt::tt_metal::DispatchCoreType dispatchCoreTypeValue =
+        ::tt::tt_metal::DispatchCoreType::ETH;
+    ::ttnn::MeshDeviceConfig meshConfig(shape, std::nullopt, {});
+
     static std::shared_ptr<ttnn::MeshDevice> ownedInstance =
-        ::ttnn::MeshDevice::create_unit_mesh(0, l1SmallSize);
+        ::ttnn::MeshDevice::create(meshConfig, l1SmallSize, traceRegionSize, 1,
+                                   dispatchCoreTypeValue);
+
     hasOwnedDevice = true;
     return ownedInstance.get();
   }
