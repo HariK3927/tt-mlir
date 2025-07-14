@@ -21,7 +21,7 @@ from ttmlir.passes import (
     MLIRModuleLogger,
 )
 
-from .apis import Shape, TTIRBuilder, TypeInfo
+from .apis import Shape, TTIRBuilder, TypeInfo, OutputLayoutConfig, Conv2dConfig
 
 TT_MLIR_HOME = os.environ.get("TT_MLIR_HOME", "")
 
@@ -34,6 +34,7 @@ OPTIMIZATION_POLICIES = {
     "Greedy L1 Interleaved": optimizer_overrides.MemoryLayoutAnalysisPolicyType.GreedyL1Interleaved,
     "BF Interleaved": optimizer_overrides.MemoryLayoutAnalysisPolicyType.BFInterleaved,
 }
+
 
 class Marks:
     """
@@ -171,20 +172,30 @@ def create_custom_pipeline_fn(
     return wrapper
 
 
-def optimization_policy_to_str(optimization_policy):
+def optimizations_to_str(optimization_policy, builder):
     override_handler = optimizer_overrides.OptimizerOverridesHandler()
     # Parse optimization policy from optimization_options.
-    if optimization_policy not in OPTIMIZATION_POLICIES:
-        raise ValueError(f"Invalid optimization policy selected: {optimization_policy}")
-
-    if optimization_policy == "Optimizer Disabled":
-        override_handler.set_enable_optimizer(False)
-    else:
-        override_handler.set_enable_optimizer(True)
-        override_handler.set_enable_memory_layout_analysis(False)
-        override_handler.set_memory_layout_analysis_policy(
-            OPTIMIZATION_POLICIES[optimization_policy]
-        )
+    if optimization_policy:
+        if optimization_policy not in OPTIMIZATION_POLICIES:
+            raise ValueError(
+                f"Invalid optimization policy selected: {optimization_policy}"
+            )
+        if optimization_policy == "Optimizer Disabled":
+            override_handler.set_enable_optimizer(False)
+        else:
+            override_handler.set_enable_optimizer(True)
+            override_handler.set_enable_memory_layout_analysis(True)
+            override_handler.set_memory_layout_analysis_policy(
+                OPTIMIZATION_POLICIES[optimization_policy]
+            )
+    print(builder._get_conv2d_config_params())
+    # Add any op-level overrides to override_handler
+    for op_name, param in builder._get_output_layout_params().items():
+        override_handler.add_output_layout_override(op_name, param)
+    for op_name, param in builder._get_conv2d_config_params().items():
+        print(type(param))
+        override_handler.add_conv2d_config_override(op_name, param)
+    print(override_handler.to_string())
     return override_handler.to_string()
 
 
@@ -319,8 +330,9 @@ def build_mlir_module(
 
 def run_pipeline(
     module,
+    builder: TTIRBuilder,
     pipeline_fn: Callable = ttir_to_ttnn_backend_pipeline,
-    pipeline_options: List[str] = None,
+    pipeline_options: List[str] = [],
     dump_to_file: bool = True,
     output_file_name: str = "test.mlir",
     system_desc_path: Optional[str] = None,
@@ -346,18 +358,6 @@ def run_pipeline(
     -------
     MLIR module containing MLIR op graph defined by `module` and pipeline_fn.
     """
-    if pipeline_options is None:
-        pipeline_options = []
-
-    if optimization_policy:
-        override_handler = optimizer_overrides.OptimizerOverridesHandler()
-        override_handler.set_memory_layout_analysis_policy(
-            OPTIMIZATION_POLICIES[optimization_policy]
-        )
-        pipeline_options.append(override_handler.to_string())
-
-    if argument_types_string:
-        tt_populate_argument_types(module, argument_types_string)
 
     # Default to the `SYSTEM_DESC_PATH` envvar
     if system_desc_path is None:
@@ -370,10 +370,15 @@ def run_pipeline(
         pipeline_options.append(f"mesh-shape={mesh_shape[0]},{mesh_shape[1]}")
     if argument_types_string:
         pipeline_options.append("enable-const-eval=true")
-    if optimization_policy:
-        overrides = optimization_policy_to_str(optimization_policy)
+        tt_populate_argument_types(module, argument_types_string)
+    if (
+        optimization_policy
+        or builder._get_output_layout_params()
+        or builder._get_conv2d_config_params()
+    ):
+        overrides = optimizations_to_str(optimization_policy, builder)
         pipeline_options.append(overrides)
-
+    print(" ".join(pipeline_options))
     # Now, pass it through the pipeline. Module gets modified in place.
     pipeline_fn(module, " ".join(pipeline_options))
 
@@ -505,12 +510,10 @@ def compile_to_flatbuffer(
     output_file_mlir = get_target_path(output_root, test_base + mlir_suffix, target)
     output_file_fbb = ".".join([output_file_mlir, target_extension])
 
-    # Add any op-level overrides to pipeline_options
-    pipeline_options += builder._get_overrides()
-
     # Compile TTIR MLIR -> TT{Metal,NN} MLIR
     module = run_pipeline(
         module,
+        builder,
         pipeline_fn,
         pipeline_options=pipeline_options,
         dump_to_file=module_dump,

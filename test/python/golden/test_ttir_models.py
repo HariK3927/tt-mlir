@@ -52,10 +52,14 @@ def test_arbitrary_model(shapes: List[Shape], dtypes: List[torch.dtype], request
         pytest.param("ttmetal", marks=pytest.mark.skip("TTMetal not supported yet")),
     ],
 )
+@pytest.mark.parametrize(
+    "overrides", ["Optimizer Disabled", "Greedy L1 Interleaved", "BF Interleaved"]
+)
 def test_mnist(
     shapes: List[Shape],
     dtypes: List[torch.dtype],
     target: str,
+    overrides: str,
     request,
 ):
     def model(
@@ -78,6 +82,7 @@ def test_mnist(
         model,
         shapes,
         dtypes,
+        optimization_policy=overrides,
         test_base=request.node.name,
         target=target,
         output_root=request.config.getoption("path"),

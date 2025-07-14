@@ -145,6 +145,28 @@ class GoldenCheckLevel(Enum):
     GRAPH_LEVEL = auto()  # Check graph level goldens only
 
 
+class OutputLayoutConfig:
+    def __init__(self):
+        self.params = {}
+
+    # def __getitem__(self):
+    #    return self.params
+
+    # def __setitem__(self, value):
+    #    self.params.append(value)
+
+
+class Conv2dConfig:
+    def __init__(self):
+        self.params = {}
+
+    # def __getitem__(self):
+    #    return self.params
+
+    # def __setitem__(self, value):
+    #   self.params.append(value)
+
+
 class TTIRBuilder(TTIRBuilderOps):
     """Builder class providing APIs for creating TTIR ops."""
 
@@ -169,8 +191,11 @@ class TTIRBuilder(TTIRBuilderOps):
         # golden check level
         self._golden_check_level = GoldenCheckLevel.OP_LEVEL
 
-        # override parameters
-        self._override_params = {}
+        # output layout override parameters
+        self._output_layout_params = OutputLayoutConfig()
+
+        # conv2d config override parameters
+        self._conv2d_config_params = Conv2dConfig()
 
     # ----- Public helpers -----
 
@@ -389,7 +414,7 @@ class TTIRBuilder(TTIRBuilderOps):
                 self.id_golden_map[output_key] = Golden(tensor)
 
     def set_output_layout_override(self, attributes: Dict[str, str], op_name: str):
-        override_handler = optimizer_overrides.OptimizerOverridesHandler()
+        # override_handler = optimizer_overrides.OptimizerOverridesHandler()
         output_layout_override = optimizer_overrides.OutputLayoutOverrideParams()
         for key, value in attributes.items():
             match key:
@@ -408,9 +433,9 @@ class TTIRBuilder(TTIRBuilderOps):
                 case _:
                     raise ValueError(f"Invalid override attribute: {key}")
 
-        if not output_layout_override.empty():
-            override_handler.add_output_layout_override(op_name, output_layout_override)
-        self._override_params[str(self._loc)] = override_handler.to_string()
+        # if not output_layout_override.empty():
+        #    override_handler.add_output_layout_override(op_name, output_layout_override)
+        self._output_layout_params.params[op_name] = output_layout_override
 
     def set_conv2d_config_override(self, configs: Dict[str, str], op_name: str):
         override_handler = optimizer_overrides.OptimizerOverridesHandler()
@@ -472,7 +497,8 @@ class TTIRBuilder(TTIRBuilderOps):
 
         if not conv2d_config_override.empty():
             override_handler.add_conv2d_config_override(op_name, conv2d_config_override)
-        self._override_params[str(self._loc)] = override_handler.to_string()
+            print(type(conv2d_config_override))
+        self._conv2d_config_params.params[op_name] = conv2d_config_override
 
     # ----- Private helpers -----
 
@@ -584,14 +610,18 @@ class TTIRBuilder(TTIRBuilderOps):
     # ----- Utility Conversion ----
 
     @autodoc_skip
-    def _get_overrides(self) -> List[str]:
+    def _get_output_layout_params(self) -> Dict:
         """
-        Returns a list of strings of overrides
+        Returns a list of strings of output layout overrides
         """
-        params = []
-        for key, value in self._override_params.items():
-            params.append(value)
-        return params
+        return self._output_layout_params.params
+
+    @autodoc_skip
+    def _get_conv2d_config_params(self) -> Dict:
+        """
+        Returns a list of strings of conv2d config overrides
+        """
+        return self._conv2d_config_params.params
 
     @autodoc_skip
     def get_datatype_from_torch_dtype(self, dtype: torch.dtype) -> DataType:

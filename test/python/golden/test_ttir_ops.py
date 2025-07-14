@@ -832,7 +832,7 @@ def test_concat(shapes: List[Shape], dim: int, request):
 conv2d_config = {
     "dtype": "bf16",
     "weights_dtype": "bf16",
-    "activation": "none",
+    "activation": "relu",
     "deallocate_activation": "false",
     "reallocate_halo_output": "true",
     "act_block_h_override": "0",
@@ -895,18 +895,19 @@ def test_conv2d(
             groups=groups,
             unit_attrs=unit_attrs,
         )
-        builder.set_conv2d_config_override(config, "conv2d_0")
+        if len(config) > 0:
+            builder.set_conv2d_config_override(config, "conv2d_0")
         return conv2d_0
 
     compile_to_flatbuffer(
         conv2d,
         shapes,
         dtypes,
-        optimization_policy="Optimizer Disabled",
         test_base=request.node.name,
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),
     )
+    assert False, "T"
 
 
 @pytest.mark.parametrize(
