@@ -2211,6 +2211,13 @@ namespace {
 class ConcatenateHeadsOpConversionPattern
     : public TTNNToEmitCBaseOpConversionPattern<
           mlir::tt::ttnn::ConcatenateHeadsOp> {
+private:
+  std::string getPrefixSearchPattern() const override {
+    return "ttnn.concatenate_heads";
+  }
+  std::string getPrefixSwapPattern() const override {
+    return "ttnn::operations::experimental::transformer::concatenate_heads";
+  }
 
 public:
   using TTNNToEmitCBaseOpConversionPattern<
