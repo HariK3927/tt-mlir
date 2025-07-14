@@ -71,89 +71,12 @@ static RankedTensorType calculateOptimalLayoutForTensorType(
   return applyGridShape(tensorType, optimalOutputGrid.getShape());
 }
 
-static SmallVector<int64_t>
-calculateOutputBlockFactors(ArrayRef<int64_t> outputShardShape,
-                            unsigned dstRegisterSizeTiles) {
-  // The output operand always corresponds to the compute grid and is therefore
-  // the only shape we care about when it comes to constraining on the dst
-  // register size. We reverse the output shape to give the priority to the
-  // inner dimension and to ensure row major output.
-  int64_t remainingBlockFactor = static_cast<int64_t>(dstRegisterSizeTiles);
-  SmallVector<int64_t> outputBlockFactors;
-  outputBlockFactors.reserve(outputShardShape.size());
-  for (int64_t dim : llvm::reverse(outputShardShape)) {
-    for (int64_t factor = remainingBlockFactor; factor > 0; factor--) {
-      if (dim % factor == 0) {
-        outputBlockFactors.push_back(dim / factor);
-        // If the dimension is fully consumed by this factor, then we can
-        // continue pulling factors from outer dimensions. Otherwise we must
-        // snap it to 1 to enforce row major output.
-        bool consumed = dim == factor;
-        remainingBlockFactor = consumed ? remainingBlockFactor / factor : 1;
-        assert(remainingBlockFactor > 0);
-        break;
-      }
-    }
-  }
-  assert(outputBlockFactors.size() == outputShardShape.size());
-  // We reversed on the way in, so reverse it back.
-  return llvm::to_vector(llvm::reverse(outputBlockFactors));
-}
-
-static SmallVector<int64_t>
-calculateOptimalBlockFactors(ArrayRef<AffineMap> indexingMaps,
-                             ArrayRef<int64_t> outputShardShape,
-                             unsigned dstRegisterSizeTiles) {
-  assert(!indexingMaps.empty());
-  MLIRContext *context = indexingMaps[0].getContext();
-
-  SmallVector<int64_t> outputBlockFactors =
-      calculateOutputBlockFactors(outputShardShape, dstRegisterSizeTiles);
-
-  //
-  // Concat all of the indexing maps together, matmul example:
-  // (d0, d1, d2) -> (d0, d2)
-  // (d0, d1, d2) -> (d2, d1)
-  // (d0, d1, d2) -> (d0, d1)
-  // Becomes:
-  // (d0, d1, d2) -> (d0, d2, d2, d1, d0, d1)
-  //
-  // We reverse it so that output dimensions get priority for the inverse
-  // permutation.
-  //
-  SmallVector<AffineMap> indexingMapsReversed =
-      llvm::to_vector(llvm::reverse(indexingMaps));
-  AffineMap concat = concatAffineMaps(indexingMapsReversed, context);
-
-  //
-  // Invert the permutation to get a map that we can use to get the buffer
-  // factors. Above example becomes:
-  // (d0, d1, d2, d3, d4, d5) -> (d0, d3, d1)
-  //
-  AffineMap inverse = inversePermutation(concat);
-
-  //
-  // Since we reversed above to give the output block factors priority in the
-  // inverse affine map, we add those first. Then fill the rest of the dims with
-  // 1s, these are free variables that don't depend on the sizing of dst. In the
-  // future we might do something more intellegent with the free variables, or
-  // enable downstream passes like allocation to adjust them based on memory
-  // requirements.
-  //
-  SmallVector<int64_t> flattenedBlockFactors(outputBlockFactors);
-  flattenedBlockFactors.resize(inverse.getNumDims(), 1);
-
-  // Eval the affine map to get the buffer factors.
-  return inverse.compose(flattenedBlockFactors);
-}
-
 namespace {
 struct TTIRGenericTensorLayoutRewriter : public OpRewritePattern<GenericOp> {
   TTIRGenericTensorLayoutRewriter(MLIRContext *context,
-                                  SmallVector<int64_t> workerGridShape,
-                                  unsigned dstRegisterSizeTiles)
-      : OpRewritePattern<GenericOp>(context), workerGridShape(workerGridShape),
-        dstRegisterSizeTiles(dstRegisterSizeTiles) {}
+                                  SmallVector<int64_t> workerGridShape)
+      : OpRewritePattern<GenericOp>(context), workerGridShape(workerGridShape) {
+  }
 
   LogicalResult matchAndRewrite(GenericOp op,
                                 PatternRewriter &rewriter) const final {
@@ -166,10 +89,11 @@ struct TTIRGenericTensorLayoutRewriter : public OpRewritePattern<GenericOp> {
         rewriter, op->getResult(0), workerGridShape);
     ttcore::MetalLayoutAttr metalLayout =
         mlir::cast<ttcore::MetalLayoutAttr>(newTensorType.getEncoding());
-    ArrayRef<int64_t> outputShardShape =
-        metalLayout.getShardShape(newTensorType);
-    SmallVector<int64_t> blockFactors = calculateOptimalBlockFactors(
-        op.getIndexingMapsValue(), outputShardShape, dstRegisterSizeTiles);
+    SmallVector<int64_t> blockFactors(op.getIndexingMaps().size(), 1);
+    // TODO(jdesousa): We have moved the subblock logic to the
+    // GenericTileComputeLoops pass. Because of this, block factors will always
+    // be 1. We need to add capability here to size block factors based on L1
+    // availability.
     bool blockFactorsChanged = blockFactors != op.getBlockFactorsValue();
     if (op.getGrid().getShape() == metalLayout.getGridShape(newTensorType) &&
         !blockFactorsChanged) {
@@ -255,7 +179,6 @@ struct TTIRGenericTensorLayoutRewriter : public OpRewritePattern<GenericOp> {
   }
 
   SmallVector<int64_t> workerGridShape;
-  unsigned dstRegisterSizeTiles;
 };
 } // namespace
 
@@ -318,25 +241,15 @@ class TTIROptimizeTensorLayout
   void runOnOperation() final {
     auto device = ttcore::lookupDevice(getOperation());
     assert(device && "Device not found");
-    auto systemDesc = ttcore::getCurrentScopeSystemDesc(getOperation());
-    auto chipIds = device.getChipIds();
-    assert(chipIds.size() == 1);
-    auto chipDesc = systemDesc.getChipDesc(chipIds[0]);
 
     SmallVector<int64_t> workerGridShape = llvm::to_vector(overrideDeviceShape);
     if (workerGridShape.empty()) {
       workerGridShape = llvm::to_vector(device.getWorkerGrid().getShape());
     }
 
-    unsigned dstRegisterSizeTiles = chipDesc.getDstRegisterSizeTiles();
-    if (maxDstRegisterSizeTiles.getValue() > 0) {
-      dstRegisterSizeTiles =
-          std::min(dstRegisterSizeTiles, maxDstRegisterSizeTiles.getValue());
-    }
-
     RewritePatternSet patterns(&getContext());
-    patterns.add<TTIRGenericTensorLayoutRewriter>(
-        &getContext(), workerGridShape, dstRegisterSizeTiles);
+    patterns.add<TTIRGenericTensorLayoutRewriter>(&getContext(),
+                                                  workerGridShape);
     patterns.add<TTIRHostTxsRewriter>(&getContext(), workerGridShape);
     if (failed(applyPatternsGreedily(getOperation(), std::move(patterns)))) {
       signalPassFailure();
