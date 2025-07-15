@@ -168,7 +168,17 @@ class TTIRBuilder(TTIRBuilderOps):
         # golden check level
         self._golden_check_level = GoldenCheckLevel.OP_LEVEL
 
+        # output golden info for populating shlo
+        self._output_info: Dict[Operation, (Shape, Type)] = {}
+        self._output_create_fn: Dict[Operation, Callable] = {}
+
     # ----- Public helpers -----
+
+    def populate_goldens(self):
+        for op, output_info in self._output_info.items():
+            output = self._output_create_fn[op](*output_info)
+            golden = self._goldens[op]
+            self._override_golden(output, golden)
 
     @property
     def goldens(self) -> Dict:
@@ -829,6 +839,129 @@ class TTIRBuilder(TTIRBuilderOps):
             self.id_golden_map[str(loc)] = golden
             self._store_golden(op, golden)
             self._override_golden(output, golden)
+            print(self.id_golden_map)
+            return op
+
+    @autodoc_skip
+    def shlo_op_proxy(
+        self,
+        op_golden_function: Callable,
+        op_ttir_function: Callable,
+        inputs: List[Operand],
+        unit_attrs: Optional[List[str]] = None,
+        organize_ttir_args: Optional[Callable] = None,
+        organize_golden_args: Optional[Callable] = None,
+        output_shape: Optional[Shape] = None,
+        output_type: Optional[Type] = None,
+        output_create_fn: Optional[Callable] = None,
+        golden_kwargs: dict = {},
+        ttir_kwargs: dict = {},
+        loc: Optional[Union[str, Location]] = None,
+    ) -> Any:
+        """
+        Create and return a TTIR operation using the provided golden and TTIR functions.
+        Parameters
+        ----------
+        op_golden_function : Callable
+            Function that creates the operation using golden approach
+        op_ttir_function : Callable
+            Function that creates the operation using TTIR approach
+        inputs : *List[Operand]*
+            List of input operands for the operation
+        unit_attrs : *Optional[List[str]]*, optional
+            Optional list of unit attributes (default: None)
+        organize_ttir_args : *Optional[Callable]*, optional
+            Function to organize TTIR arguments (default: None)
+        organize_golden_args : *Optional[Callable]*, optional
+            Function to organize golden arguments (default: None)
+        output_shape : *Optional[Shape]*, optional
+            Shape of the output tensor (default: None)
+        output_type : *Optional[Type]*, optional
+            Type of the output tensor (default: None)
+        output_create_fn : *Optional[Callable]*, optional
+            Function to create output tensor (default: None)
+        golden_kwargs : dict, optional
+            Additional keyword arguments for golden function (default: {})
+        ttir_kwargs : dict, optional
+            Additional keyword arguments for TTIR function (default: {})
+        loc : *Optional[Union[str, Location]]*, optional
+            Source location information (default: None)
+        Returns
+        -------
+        Any
+            The created operation
+        """
+        # Snoop the location of the first caller outside of this file to
+        # annotate the MLIR with. NOTE that this location is _NOT_ row:col, but
+        # instead row:id, where id is a unique id given to all calls to builder
+        # funcs. See `get_next_global_id` for more details
+        stack = inspect.stack()
+        # find the innermost frame outside of this file
+        cur_filename = stack[0].filename
+
+        while len(stack) > 0 and stack[0].filename == cur_filename:
+            stack = stack[1:]
+
+        assert (
+            len(stack) > 0
+        ), "Top of callstack to builder funcs must be outside this file"
+
+        if organize_golden_args is None:
+            organize_golden_args = self._organize_eltwise_golden
+
+        with self._ctx, self._loc:
+            # Compute the golden
+            # Account for cases in which golden_arg organization is not needed:
+            if (
+                not isinstance(organize_golden_args(inputs), torch.Tensor)
+                and organize_golden_args(inputs) == 0
+            ):
+                golden_output = op_golden_function(**golden_kwargs)
+            else:
+                golden_output = op_golden_function(
+                    *(organize_golden_args(inputs)),
+                    **golden_kwargs,
+                )
+
+            golden = (
+                Golden(golden_output[0])
+                if not isinstance(golden_output, torch.Tensor)
+                else Golden(golden_output)
+            )
+
+            # Use the golden output to determine proper output shape and type unless otherwise specified.
+            output_shape = golden.tensor.shape if not output_shape else output_shape
+            if not output_type and inputs:
+                output_type = self.get_type_from_torch_dtype(
+                    self._get_golden_tensor(inputs[0]).dtype
+                )
+            elif not output_type:
+                output_type = self._default_dtype
+
+            id = self.get_next_global_id()
+            loc = (
+                get_loc_from_str(loc)
+                if loc is not None
+                else get_loc_of_extra_file_callee(id=id)
+            )
+            op = op_ttir_function(
+                *inputs,
+                loc=loc,
+                **ttir_kwargs,
+            )
+
+            # Add unit attributes if specified
+            if unit_attrs is not None:
+                from ttmlir.ir import UnitAttr
+
+                for attr_name in unit_attrs:
+                    op.operation.attributes[attr_name] = UnitAttr.get(self._ctx)
+            self.id_golden_map[str(loc)] = golden
+            self._store_golden(op, golden)
+            self._output_info[op] = (output_shape, output_type)
+            self._output_create_fn[op] = (
+                output_create_fn if output_create_fn else self._empty
+            )
             return op
 
     @autodoc_skip

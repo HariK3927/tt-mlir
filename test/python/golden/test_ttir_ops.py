@@ -14,6 +14,8 @@ from ttir_builder.utils import (
     build_mlir_module,
 )
 
+# from ttmlir.passes import stablehlo_to_ttir_pipeline
+
 
 def exp(in0: Operand, builder: TTIRBuilder, unit_attrs: Optional[List[str]] = None):
     return builder.exp(in0, unit_attrs=unit_attrs)
@@ -254,9 +256,13 @@ def test_sqrt(shape: Shape, dtype: torch.dtype, target: str, request):
 
 
 def cbrt(in0: Operand, builder: TTIRBuilder, unit_attrs: Optional[List[str]] = None):
-    x = builder.cbrt(in0, unit_attrs=unit_attrs, dialect="stablehlo")
-    print(x)
-    return x
+    return builder.cbrt(in0, unit_attrs=unit_attrs)
+
+
+def shlo_cbrt(
+    in0: Operand, builder: TTIRBuilder, unit_attrs: Optional[List[str]] = None
+):
+    return builder.shlo_cbrt(in0, unit_attrs=unit_attrs)
 
 
 @pytest.mark.parametrize("shape", [(128, 128)], ids=shape_str)
@@ -1741,7 +1747,29 @@ def test_hoisted_permute(shapes_and_perms, request, target: str):
 
 
 unary_ops = [
+    exp,
+    expm1 | Marks(pytest.mark.skip_target("ttmetal")),
+    floor | Marks(pytest.mark.fails_golden),
+    abs,
+    neg,
+    sign | Marks(pytest.mark.skip_target("ttmetal")),
+    cos,
+    sin,
+    atan | Marks(pytest.mark.skip_target("ttmetal")),
+    tanh | Marks(pytest.mark.skip_target("ttmetal")),
+    relu | Marks(pytest.mark.skip_target("ttmetal")),
+    gelu | Marks(pytest.mark.skip_target("ttmetal")),
+    leaky_relu | Marks(pytest.mark.skip_target("ttmetal")),
     cbrt | Marks(pytest.mark.skip_target("ttmetal")),
+    sigmoid | Marks(pytest.mark.fails_golden),
+    reciprocal,
+    is_finite | Marks(pytest.mark.skip_target("ttmetal")),
+    ceil | Marks(pytest.mark.fails_golden),
+    sum | Marks(pytest.mark.skip_target("ttmetal")),
+    mean | Marks(pytest.mark.skip_target("ttmetal")),
+    max | Marks(pytest.mark.fails_golden, pytest.mark.skip_target("ttmetal")),
+    min | Marks(pytest.mark.fails_golden, pytest.mark.skip_target("ttmetal")),
+    get_dimension_size | Marks(pytest.mark.skip_target("ttmetal")),
 ]
 
 
@@ -1753,9 +1781,6 @@ def test_unary_ops(
     test_fn: Callable, shape: Shape, dtype: torch.dtype, target: str, request
 ):
     pipeline_options = []
-    build_mlir_module(test_fn, inputs_shapes=[shape], inputs_types=[dtype])
-    assert False, "t"
-    """
     compile_to_flatbuffer(
         test_fn,
         inputs_shapes=[shape],
@@ -1766,7 +1791,6 @@ def test_unary_ops(
         target=target,
         pipeline_options=pipeline_options,
     )
-    """
 
 
 @pytest.mark.parametrize("shape", [(128, 128)], ids=shape_str)
@@ -2046,3 +2070,17 @@ def test_hoisted_dot_general(
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),
     )
+
+
+def main():
+    compile_to_flatbuffer(
+        shlo_cbrt,
+        inputs_shapes=[(128, 128)],
+        inputs_types=[torch.float32],
+        system_desc_path="ttrt-artifacts/system_desc.ttsys",
+        dialect="stablehlo",
+    )
+
+
+if __name__ == "__main__":
+    main()

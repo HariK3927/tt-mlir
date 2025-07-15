@@ -294,7 +294,6 @@ class TTIRBuilderOps:
         self,
         in0: Operand,
         unit_attrs: Optional[List[str]] = None,
-        dialect: str = "ttir",
     ) -> OpView:
         """
         Creates ``ttir.cbrt``.
@@ -329,19 +328,29 @@ class TTIRBuilderOps:
         golden = self._get_golden_tensor(in0)
         golden_sign = torch.sign(golden)
         golden_cbrt = torch.pow(torch.abs(golden), 1 / 3)
-        if dialect == "stablehlo":
-            fn = stablehlo.CbrtOp
-            organize_op_args = lambda i, o, _: (i[0],)
-        else:
-            fn = ttir.CbrtOp
-            organize_op_args = None
         return self.op_proxy(
             torch.mul,
-            fn,
+            ttir.CbrtOp,
             [in0],
             golden_kwargs={"input": golden_sign, "other": golden_cbrt},
             organize_golden_args=lambda i: 0,
-            organize_ttir_args=organize_op_args,
+            unit_attrs=unit_attrs,
+        )
+
+    def shlo_cbrt(
+        self,
+        in0: Operand,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        golden = self._get_golden_tensor(in0)
+        golden_sign = torch.sign(golden)
+        golden_cbrt = torch.pow(torch.abs(golden), 1 / 3)
+        return self.shlo_op_proxy(
+            torch.mul,
+            stablehlo.CbrtOp,
+            [in0],
+            golden_kwargs={"input": golden_sign, "other": golden_cbrt},
+            organize_golden_args=lambda i: 0,
             unit_attrs=unit_attrs,
         )
 

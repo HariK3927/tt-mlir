@@ -168,6 +168,7 @@ def build_mlir_module(
     fn: Callable,
     inputs_shapes: List[Shape],
     inputs_types: Optional[List[Union[torch.dtype, TypeInfo]]] = None,
+    dialect: str = "ttir",
     mesh_shape: Optional[Tuple[int, int]] = None,
     module_dump: bool = False,
     base: Optional[str] = None,
@@ -275,7 +276,12 @@ def build_mlir_module(
                     )
                 result = fn(*inputs, builder=builder)
                 output_ops = result if hasattr(result, "__iter__") else (result,)
-                output_goldens = [builder._get_golden_tensor(op) for op in output_ops]
+                if dialect == "ttir":
+                    output_goldens = [
+                        builder._get_golden_tensor(op) for op in output_ops
+                    ]
+                else:
+                    output_goldens = []
                 builder.set_graph_input_output(input_goldens, output_goldens)
                 return result
 
@@ -358,6 +364,7 @@ def compile_to_flatbuffer(
     system_desc_path: str = "ttrt-artifacts/system_desc.ttsys",
     test_base: str = "test",
     output_root: str = ".",
+    dialect: Literal["ttir", "stablehlo"] = "ttir",
     target: Literal["ttnn", "ttmetal"] = "ttnn",
     mesh_shape: Optional[Tuple[int, int]] = None,
     module_dump: bool = True,
@@ -467,6 +474,13 @@ def compile_to_flatbuffer(
 
     output_file_mlir = get_target_path(output_root, test_base + mlir_suffix, target)
     output_file_fbb = ".".join([output_file_mlir, target_extension])
+
+    if dialect == "stablehlo":
+        from ttmlir.compile_and_run import stablehlo_to_ttir
+
+        module = stablehlo_to_ttir(module)
+        print(module)
+        builder.populate_goldens()
 
     # Compile TTIR MLIR -> TT{Metal,NN} MLIR
     module = run_pipeline(
