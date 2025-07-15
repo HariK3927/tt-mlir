@@ -149,22 +149,10 @@ class OutputLayoutConfig:
     def __init__(self):
         self.params = {}
 
-    # def __getitem__(self):
-    #    return self.params
-
-    # def __setitem__(self, value):
-    #    self.params.append(value)
-
 
 class Conv2dConfig:
     def __init__(self):
         self.params = {}
-
-    # def __getitem__(self):
-    #    return self.params
-
-    # def __setitem__(self, value):
-    #   self.params.append(value)
 
 
 class TTIRBuilder(TTIRBuilderOps):
@@ -414,8 +402,8 @@ class TTIRBuilder(TTIRBuilderOps):
                 self.id_golden_map[output_key] = Golden(tensor)
 
     def set_output_layout_override(self, attributes: Dict[str, str], op: Operand):
-        # override_handler = optimizer_overrides.OptimizerOverridesHandler()
         output_layout_override = optimizer_overrides.OutputLayoutOverrideParams()
+
         for key, value in attributes.items():
             match key:
                 case "data_type":
@@ -436,7 +424,6 @@ class TTIRBuilder(TTIRBuilderOps):
         self._output_layout_params.params[op.location.name_str] = output_layout_override
 
     def set_conv2d_config_override(self, configs: Dict[str, str], op: Operand):
-        override_handler = optimizer_overrides.OptimizerOverridesHandler()
         conv2d_config_override = optimizer_overrides.Conv2dConfigOverrideParams()
 
         for key, value in configs.items():
@@ -474,12 +461,6 @@ class TTIRBuilder(TTIRBuilderOps):
                     conv2d_config_override.set_transpose_shards_from_str(value)
                 case "output_layout":
                     conv2d_config_override.set_output_layout_from_str(value)
-                # case "preprocess_weights_on_device":
-                #    conv2d_config_override.set_preprocess_weights_on_device_from_str(
-                #        value
-                #    )
-                # case "always_preprocess_weights":
-                #    conv2d_config_override.set_always_preprocess_weights_from_str(value)
                 case "enable_act_double_buffer":
                     conv2d_config_override.set_enable_act_double_buffer_from_str(value)
                 case "enable_weights_double_buffer":
