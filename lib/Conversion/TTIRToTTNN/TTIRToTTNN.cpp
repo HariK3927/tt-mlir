@@ -1574,6 +1574,22 @@ public:
   }
 };
 
+class OptimizationBarrierOpConversionPattern
+    : public OpConversionPattern<ttir::OptimizationBarrierOp> {
+public:
+  using OpConversionPattern<ttir::OptimizationBarrierOp>::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(ttir::OptimizationBarrierOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    rewriter.replaceOpWithNewOp<ttnn::OptimizationBarrierOp>(
+        op, this->getTypeConverter()->convertType(op.getResult().getType()),
+        adaptor.getInput());
+
+    return success();
+  }
+};
+
 } // namespace
 
 namespace mlir::tt {
@@ -1681,7 +1697,8 @@ void populateTTIRToTTNNPatterns(MLIRContext *ctx, RewritePatternSet &patterns,
            FillCacheOpConversionPattern,
            ScatterOpConversionPattern,
            PermuteOpConversionPattern,
-           UpsampleOpConversionPattern
+           UpsampleOpConversionPattern,
+           OptimizationBarrierOpConversionPattern
            >(typeConverter, ctx);
   // ANCHOR_END: op_rewriter_pattern_set
   // clang-format on

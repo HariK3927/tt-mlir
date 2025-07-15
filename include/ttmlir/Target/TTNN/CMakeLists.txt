@@ -22,6 +22,7 @@ set(TTNN_OPERATIONS_FBS_GEN_SOURCES
   operations/pool.fbs
   operations/reduction.fbs
   operations/trace.fbs
+  operations/optimization_barrier.fbs
 )
 
 set(TTNN_FBS_GEN_SOURCES

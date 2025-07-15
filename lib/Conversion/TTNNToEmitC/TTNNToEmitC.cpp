@@ -2205,6 +2205,37 @@ public:
 };
 } // namespace
 
+// OptimizationBarrierOp conversion pattern
+//
+namespace {
+class OptimizationBarrierOpConversionPattern
+    : public TTNNToEmitCBaseOpConversionPattern<
+          mlir::tt::ttnn::OptimizationBarrierOp> {
+public:
+  using TTNNToEmitCBaseOpConversionPattern<
+      mlir::tt::ttnn::OptimizationBarrierOp>::
+      TTNNToEmitCBaseOpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(mlir::tt::ttnn::OptimizationBarrierOp srcOp,
+                  OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+
+    ttnn_to_emitc::EmitCTTNNEmitter<mlir::tt::ttnn::OptimizationBarrierOp>
+        emitter(srcOp, adaptor, rewriter);
+
+    llvm::SmallVector<mlir::Attribute> args{
+        emitter.emit(srcOp.getInput()),
+        emitter.emit(std::nullopt) |
+            emitter.getMemoryConfig(srcOp.getResult())};
+
+    emitter.replaceOp(*this, args);
+
+    return success();
+  }
+};
+} // namespace
+
 namespace mlir::tt {
 
 // ANCHOR: op_rewriter_pattern_set_emitc
@@ -2394,6 +2425,10 @@ void populateTTNNToEmitCPatterns(mlir::MLIRContext *ctx,
   // BatchNorm op
   //
   patterns.add<BatchNormOpConversionPattern>(typeConverter, ctx);
+
+  // OptimizationBarrier op
+  //
+  patterns.add<OptimizationBarrierOpConversionPattern>(typeConverter, ctx);
 }
 // ANCHOR_END: op_rewriter_pattern_set_emitc
 

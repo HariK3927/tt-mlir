@@ -2215,4 +2215,22 @@ def TTNN_TraceOp : TTNN_Op<"trace"> {
 
     let hasVerifier = 1;
 }
+
+def TTNN_OptimizationBarrierOp : TTNN_Op<"optimization_barrier", [MemoryEffects<[MemRead, MemWrite]>]> {
+  let summary = "Optimization barrier operation.";
+  let description = [{
+    The `optimization_barrier` operation prevents compiler optimizations from reordering or eliminating
+    the values passed through it. It acts as a barrier for optimization passes.
+
+    Inputs:
+    - `inputs` (Variadic): Any number of input values of any type.
+
+    Outputs:
+    - `results` (Variadic): The same number and types as the inputs, passed through unchanged.
+  }];
+
+  let arguments = (ins AnyRankedTensor:$input);
+
+  let results = (outs AnyRankedTensor:$result);
+}
 #endif

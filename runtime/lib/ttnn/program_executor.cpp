@@ -49,6 +49,7 @@
 #include "operations/moreh/moreh_cumsum.h"
 #include "operations/normalization/batch_norm.h"
 #include "operations/normalization/softmax.h"
+#include "operations/optimization_barrier/optimization_barrier.h"
 #include "operations/pool/pool2d.h"
 #include "operations/pool/upsample.h"
 #include "operations/reduction/argmax.h"
@@ -117,6 +118,8 @@ void ProgramExecutor::execute() {
   LOG_DEBUG(LogType::LogRuntimeTTNN,
             "Starting execution of program: ", program->name()->c_str());
   for (const ::tt::target::ttnn::Operation *op : *program->operations()) {
+    std::cerr << "Executing operation: " << op->debug_info()->c_str()
+              << std::endl;
     LOG_DEBUG(LogType::LogRuntimeTTNN,
               "Executing operation: ", op->debug_info()->c_str());
     perf::Env::get().tracyLogOpLocation(std::string(op->loc_info()->c_str()));
@@ -318,6 +321,10 @@ void ProgramExecutor::runOperation(const ::tt::target::ttnn::Operation *op) {
   }
   case ::tt::target::ttnn::OpType::TraceOp: {
     return operations::trace::run(op->type_as_TraceOp(), getContext());
+  }
+  case ::tt::target::ttnn::OpType::OptimizationBarrierOp: {
+    return operations::optimization_barrier::run(
+        op->type_as_OptimizationBarrierOp(), getContext());
   }
   default: {
     LOG_FATAL("Unsupported operation type: ",

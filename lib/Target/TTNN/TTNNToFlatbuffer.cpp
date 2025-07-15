@@ -1769,6 +1769,15 @@ createOp(FlatbufferObjectCache &cache, TraceOp op,
       op.getCallee().str().c_str(), programIdx, &inputs, &outputs);
 }
 
+::flatbuffers::Offset<::tt::target::ttnn::OptimizationBarrierOp>
+createOp(FlatbufferObjectCache &cache, OptimizationBarrierOp op,
+         const llvm::StringMap<uint32_t> &programIndexMap) {
+  auto in = cache.at<::tt::target::ttnn::TensorRef>(op.getInput());
+  auto out = cache.getOrCreate(op->getResult(0), tensorValueToFlatbuffer,
+                               kHostAllocatedSize);
+  return ::tt::target::ttnn::CreateOptimizationBarrierOp(*cache.fbb, in, out);
+}
+
 ::flatbuffers::Offset<::tt::target::ttnn::Operation>
 emitTTNNOperation(FlatbufferObjectCache &cache, Operation *op,
                   const llvm::StringMap<uint32_t> &programIndexMap,
@@ -2226,6 +2235,12 @@ emitTTNNOperation(FlatbufferObjectCache &cache, Operation *op,
   if (auto traceOp = dyn_cast<TraceOp>(op); traceOp) {
     return createOperation(cache, createOp(cache, traceOp, programIndexMap),
                            debugString, locInfo);
+  }
+  if (auto optimizationBarrierOp = dyn_cast<OptimizationBarrierOp>(op);
+      optimizationBarrierOp) {
+    return createOperation(
+        cache, createOp(cache, optimizationBarrierOp, programIndexMap),
+        debugString, locInfo);
   }
 
   llvm_unreachable("unhandled op in emitTTNNOperation");
