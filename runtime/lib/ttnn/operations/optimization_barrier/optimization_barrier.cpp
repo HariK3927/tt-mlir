@@ -5,10 +5,11 @@
 #include "operations/optimization_barrier/optimization_barrier.h"
 
 namespace tt::runtime::ttnn::operations::optimization_barrier {
-void run(const ::tt::target::ttnn::OptimizationBarrierOp *op, ProgramContext &context) {
+void run(const ::tt::target::ttnn::OptimizationBarrierOp *op,
+         ProgramContext &context) {
   ProgramTensorPool &tensorPool = context.getTensorPool();
 
   ::ttnn::Tensor &input = tensorPool.getTTNNTensorAndValidate(op->in());
-  tensorPool.insertTTNNTensorAndValidate(op->out(), input);  
+  tensorPool.insertTTNNTensorAndValidate(op->out(), input);
 }
 } // namespace tt::runtime::ttnn::operations::optimization_barrier

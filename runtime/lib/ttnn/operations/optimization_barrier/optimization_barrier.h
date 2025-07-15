@@ -9,7 +9,8 @@
 #include "ttmlir/Target/TTNN/program_generated.h"
 
 namespace tt::runtime::ttnn::operations::optimization_barrier {
-void run(const ::tt::target::ttnn::OptimizationBarrierOp *op, ProgramContext &context);
+void run(const ::tt::target::ttnn::OptimizationBarrierOp *op,
+         ProgramContext &context);
 } // namespace tt::runtime::ttnn::operations::optimization_barrier
 
 #endif
