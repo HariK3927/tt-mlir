@@ -2216,7 +2216,7 @@ private:
     return "ttnn.concatenate_heads";
   }
   std::string getPrefixSwapPattern() const override {
-    return "ttnn::operations::transformer::concatenate_heads";
+    return "ttnn::transformer::concatenate_heads";
   }
 
 public:
