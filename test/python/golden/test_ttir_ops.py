@@ -829,6 +829,42 @@ def test_concat(shapes: List[Shape], dim: int, request):
     )
 
 
+output_layout_overrides = {
+    "data_type": "bf16",
+    "memory_layout": "tile",
+    "buffer_type": "l1",
+    "tensor_memory_layout": "interleaved",
+    "grid_shape": "[1x1]",
+}
+
+
+@pytest.mark.parametrize("shape", [(128, 128)])
+@pytest.mark.parametrize("dtype", [torch.bfloat16])
+def test_output_layout_overrides2(
+    shape: Shape,
+    dtype: torch.dtype,
+    request,
+):
+    def matmul_oo(
+        in0: Operand,
+        in1: Operand,
+        builder: TTIRBuilder,
+        unit_attrs: Optional[List[str]] = None,
+    ):
+        matmul_0 = builder.matmul(in0, in1, unit_attrs=unit_attrs)
+        builder.set_output_layout_override(output_layout_overrides, matmul_0)
+        return matmul_0
+
+    compile_to_flatbuffer(
+        matmul_oo,
+        [shape, shape],
+        [dtype, dtype],
+        test_base=request.node.name,
+        output_root=request.config.getoption("--path"),
+        system_desc_path=request.config.getoption("--sys-desc"),
+    )
+
+
 conv2d_config = {
     "dtype": "bf16",
     "weights_dtype": "bf16",
