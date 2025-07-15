@@ -1025,7 +1025,7 @@ def TTNN_ConcatenateHeadsOp: TTNN_Op<"concatenate_heads"> {
       of shape [batch_size, sequence_size, num_heads * head_size].
     }];
 
-    let arguments = (ins AnyRankedTensor:$inputs,
+    let arguments = (ins AnyRankedTensor:$input,
                          OptionalAttr<TTNN_MemoryConfigAttr>:$memory_config);
 
     let results = (outs AnyRankedTensor:$result);

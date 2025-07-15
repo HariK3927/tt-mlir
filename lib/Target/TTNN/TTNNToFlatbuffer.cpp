@@ -1772,7 +1772,7 @@ createOp(FlatbufferObjectCache &cache, TraceOp op,
 ::flatbuffers::Offset<::tt::target::ttnn::ConcatenateHeadsOp>
 createConcatenateHeadsOp(FlatbufferObjectCache &cache, ConcatenateHeadsOp op) {
   auto in = cache.at<::tt::target::ttnn::TensorRef>(
-      getOperandThroughDPSOps(op.getInputs()));
+      getOperandThroughDPSOps(op.getInput()));
   auto out = cache.getOrCreate(op.getResult(), tensorValueToFlatbuffer,
                                kHostAllocatedSize);
   auto memoryConfig = op.getMemoryConfig()
