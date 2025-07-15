@@ -928,8 +928,31 @@ def test_concat(shapes: List[Shape], dim: int, request):
     )
 
 
+@pytest.mark.parametrize("shape", [(128, 128)])
+@pytest.mark.parametrize("dtype", [torch.float32])
+@pytest.mark.parametrize(
+    "optimization_policy",
+    [None, "Optimizer Disabled", "Greedy L1 Interleaved", "BF Interleaved"],
+)
+def test_optimization_policies(
+    shape: Shape,
+    dtype: torch.dtype,
+    optimization_policy: str,
+    request,
+):
+    compile_to_flatbuffer(
+        matmul,
+        [shape, shape],
+        [dtype, dtype],
+        optimization_policy=optimization_policy,
+        test_base=request.node.name,
+        output_root=request.config.getoption("--path"),
+        system_desc_path=request.config.getoption("--sys-desc"),
+    )
+
+
 output_layout_overrides = {
-    "data_type": "bf16",
+    "data_type": "f32",
     "memory_layout": "tile",
     "buffer_type": "l1",
     "tensor_memory_layout": "interleaved",
@@ -938,13 +961,13 @@ output_layout_overrides = {
 
 
 @pytest.mark.parametrize("shape", [(128, 128)])
-@pytest.mark.parametrize("dtype", [torch.bfloat16])
-def test_output_layout_overrides2(
+@pytest.mark.parametrize("dtype", [torch.float32])
+def test_output_layout_overrides(
     shape: Shape,
     dtype: torch.dtype,
     request,
 ):
-    def matmul_oo(
+    def matmul_overrides(
         in0: Operand,
         in1: Operand,
         builder: TTIRBuilder,
@@ -955,7 +978,7 @@ def test_output_layout_overrides2(
         return matmul_0
 
     compile_to_flatbuffer(
-        matmul_oo,
+        matmul_overrides,
         [shape, shape],
         [dtype, dtype],
         test_base=request.node.name,
@@ -965,8 +988,8 @@ def test_output_layout_overrides2(
 
 
 conv2d_config = {
-    "dtype": "bf16",
-    "weights_dtype": "bf16",
+    "dtype": "f32",
+    "weights_dtype": "f32",
     "activation": "relu",
     "deallocate_activation": "false",
     "reallocate_halo_output": "true",
