@@ -986,8 +986,10 @@ private:
           op->getResult(0).setType(
               resultType.cloneWithEncoding(actualOutputLayout));
         }
-        TTMLIR_DEBUG(ttmlir::LogComponent::Optimizer,
-                     "Successfully passed constraints, no conversion needed");
+        TTMLIR_DEBUG(
+            ttmlir::LogComponent::Optimizer,
+            "Op {} successfully passed constraints, no conversion needed",
+            op->getName());
         return;
       }
 
@@ -1003,7 +1005,8 @@ private:
 
       // Row major input passed constraints, let's add necessary conversions.
       TTMLIR_DEBUG(ttmlir::LogComponent::Optimizer,
-                   "Successfully passed constraints after inserting RM");
+                   "Op {} successfully passed constraints after inserting RM",
+                   op->getName());
       convertOpToRowMajorAndBack(op);
     });
   }
