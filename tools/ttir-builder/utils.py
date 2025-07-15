@@ -188,14 +188,15 @@ def optimizations_to_str(optimization_policy, builder):
             override_handler.set_memory_layout_analysis_policy(
                 OPTIMIZATION_POLICIES[optimization_policy]
             )
-    print(builder._get_conv2d_config_params())
+    else:
+        override_handler.set_enable_optimizer(True)
+        override_handler.set_enable_memory_layout_analysis(False)
+
     # Add any op-level overrides to override_handler
-    for op_name, param in builder._get_output_layout_params().items():
-        override_handler.add_output_layout_override(op_name, param)
-    for op_name, param in builder._get_conv2d_config_params().items():
-        print(type(param))
-        override_handler.add_conv2d_config_override(op_name, param)
-    print(override_handler.to_string())
+    for op_loc, param in builder._get_output_layout_params().items():
+        override_handler.add_output_layout_override(op_loc, param)
+    for op_loc, param in builder._get_conv2d_config_params().items():
+        override_handler.add_conv2d_config_override(op_loc, param)
     return override_handler.to_string()
 
 
@@ -322,8 +323,8 @@ def build_mlir_module(
 
         if module_dump:
             with open(filename, "w") as f:
-                f.write(str(module))
-                print(module)
+                f.write(module.operation.get_asm(enable_debug_info=True))
+            print(module.operation.get_asm(enable_debug_info=True))
 
         return module, builder
 
@@ -378,7 +379,7 @@ def run_pipeline(
     ):
         overrides = optimizations_to_str(optimization_policy, builder)
         pipeline_options.append(overrides)
-    print(" ".join(pipeline_options))
+
     # Now, pass it through the pipeline. Module gets modified in place.
     pipeline_fn(module, " ".join(pipeline_options))
 

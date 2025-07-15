@@ -865,7 +865,7 @@ conv2d_config = {
 @pytest.mark.parametrize(
     "stride,padding,dilation,groups", [([2, 1], [2, 1], [2, 1], 2)]
 )
-@pytest.mark.parametrize("config", [{}, conv2d_config])
+@pytest.mark.parametrize("config", [None, conv2d_config])
 def test_conv2d(
     shapes: List[Shape],
     dtypes: List[torch.dtype],
@@ -895,8 +895,8 @@ def test_conv2d(
             groups=groups,
             unit_attrs=unit_attrs,
         )
-        if len(config) > 0:
-            builder.set_conv2d_config_override(config, "conv2d_0")
+        if config:
+            builder.set_conv2d_config_override(config, conv2d_0)
         return conv2d_0
 
     compile_to_flatbuffer(
@@ -907,7 +907,6 @@ def test_conv2d(
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),
     )
-    assert False, "T"
 
 
 @pytest.mark.parametrize(
