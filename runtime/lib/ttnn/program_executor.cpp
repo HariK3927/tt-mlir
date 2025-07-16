@@ -118,8 +118,6 @@ void ProgramExecutor::execute() {
   LOG_DEBUG(LogType::LogRuntimeTTNN,
             "Starting execution of program: ", program->name()->c_str());
   for (const ::tt::target::ttnn::Operation *op : *program->operations()) {
-    std::cerr << "Executing operation: " << op->debug_info()->c_str()
-              << std::endl;
     LOG_DEBUG(LogType::LogRuntimeTTNN,
               "Executing operation: ", op->debug_info()->c_str());
     perf::Env::get().tracyLogOpLocation(std::string(op->loc_info()->c_str()));

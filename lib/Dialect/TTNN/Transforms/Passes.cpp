@@ -47,20 +47,6 @@ public:
           return opOperand.is(value);
         });
 
-    /*while (isa<ttnn::OptimizationBarrierOp>(endOp)) {
-      OpResult result = endOp->getResult(0);
-      if (!result.use_empty()) {
-        endOp = (*result.user_begin());
-      } else {
-        endOp = result.getDefiningOp();
-        break;
-      }
-      opOperandIter =
-          llvm::find_if(endOp->getOpOperands(), [&](OpOperand &opOperand) {
-            return opOperand.is(result);
-          });
-    }*/
-
     // In case of DPS op keep going until we find the last usage of the tensor.
     //
     while (
