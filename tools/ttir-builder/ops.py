@@ -8,7 +8,7 @@ import inspect
 from dataclasses import dataclass
 from typing import List, Optional, Union, Tuple, Callable, Dict, Any
 from ttmlir.ir import *
-from ttmlir.dialects import ttir, ttcore, tensor, quant, stablehlo
+from ttmlir.dialects import ttir, ttcore, tensor, quant, stablehlo, sdy
 from ttmlir.passes import GoldenTensor, DataType
 import torch
 from enum import Enum, auto
@@ -350,6 +350,59 @@ class TTIRBuilderOps:
             stablehlo.CbrtOp,
             [in0],
             golden_kwargs={"input": golden_sign, "other": golden_cbrt},
+            organize_golden_args=lambda i: 0,
+            unit_attrs=unit_attrs,
+        )
+
+    def sdy_constant(
+        self,
+        in0: Operand,
+        value,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        print(value)
+        shape = self._get_golden_tensor(in0).shape
+        # golden_sign = torch.sign(golden)
+        # golden_cbrt = torch.pow(torch.abs(golden), 1 / 3)
+        value = DenseI32ArrayAttr.get(value)
+        return self.shlo_op_proxy(
+            torch.Tensor,
+            sdy.ConstantOp,
+            [],
+            ttir_kwargs={"value": value},
+            golden_kwargs={"data": value},
+            organize_golden_args=lambda i: 0,
+            unit_attrs=unit_attrs,
+        )
+
+    def sdy_mesh(
+        self,
+        sym_name: str,
+        mesh,  # MeshAttr,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        # print(value)
+        return self.shlo_op_proxy(
+            torch.Tensor,
+            sdy.MeshOp,
+            [],
+            ttir_kwargs={"mesh": mesh, "sym_name": sym_name},
+            # golden_kwargs={"data": value},
+            organize_golden_args=lambda i: 0,
+            unit_attrs=unit_attrs,
+        )
+
+    def sdy_sharding_group(
+        self,
+        in0: Operand,
+        group_id: int = 0,
+        unit_attrs: Optional[List[str]] = None,
+    ) -> OpView:
+        return self.shlo_op_proxy(
+            torch.Tensor,
+            sdy.ShardingGroupOp,
+            [in0],
+            ttir_kwargs={"group_id": group_id},
             organize_golden_args=lambda i: 0,
             unit_attrs=unit_attrs,
         )
@@ -4513,6 +4566,25 @@ class TTIRBuilderOps:
         return self.ccl_proxy(
             reduce_scatter_golden,
             ttir.ReduceScatterOp,
+            [input],
+            kwargs=kwargs,
+        )
+
+    def sdy_reduce_scatter(
+        self,
+        input: Operand,
+        reduce_type: str,
+        scatter_dim: int,
+        cluster_axis: int,
+    ) -> OpView:
+        kwargs = {
+            "reduce_type": Attribute.parse(reduce_type),
+            "scatter_dim": scatter_dim,
+            "cluster_axis": cluster_axis,
+        }
+        return self.ccl_proxy(
+            reduce_scatter_golden,
+            sdy.ReduceScatterOp,
             [input],
             kwargs=kwargs,
         )

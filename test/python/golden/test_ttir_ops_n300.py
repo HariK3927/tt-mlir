@@ -5,7 +5,7 @@
 import torch
 import pytest
 
-from typing import List, Tuple
+from typing import List, Tuple, Union, Optional
 from ttir_builder.utils import compile_to_flatbuffer
 from ttir_builder import Operand, TTIRBuilder, Shape
 
@@ -708,3 +708,53 @@ def test_matmul_and_binary_op_2(
         output_root=request.config.getoption("--path"),
         system_desc_path=request.config.getoption("--sys-desc"),
     )
+
+
+shapeM = [
+    (1, 256, 64, 256),
+]
+
+
+def shlo_cbrt(
+    in0: Operand, builder: TTIRBuilder, unit_attrs: Optional[List[str]] = None
+):
+    return builder.shlo_cbrt(in0, unit_attrs=unit_attrs)
+
+
+def neg_1x2_dim_1M(in0: Operand, builder: TTIRBuilder):
+    # MeshAttr.get((1,2))
+    meshM = ([1, 2], [0, 1])
+    mesh = builder.sdy_mesh(mesh=meshM, sym_name="sym")
+    return builder.shlo_cbrt(in0, unit_attrs=unit_attrs)
+
+
+def main2():
+    compile_to_flatbuffer(
+        neg_1x2_dim_1M,
+        shapeM,
+        mesh_shape=(1, 2),
+        # test_base=request.node.name,
+        # output_root=request.config.getoption("--path"),
+        # system_desc_path=request.config.getoption("--sys-desc"),
+    )
+
+
+def sdy_sharding_group(
+    in0: Operand, builder: TTIRBuilder, unit_attrs: Optional[List[str]] = None
+):
+    y = builder.shlo_cbrt(in0, unit_attrs=unit_attrs)
+    return builder.sdy_sharding_group(y, 0, unit_attrs=unit_attrs)
+
+
+def main():
+    compile_to_flatbuffer(
+        sdy_sharding_group,
+        inputs_shapes=[(1, 2)],
+        inputs_types=[torch.float32],
+        system_desc_path="ttrt-artifacts/system_desc.ttsys",
+        dialect="stablehlo",
+    )
+
+
+if __name__ == "__main__":
+    main()

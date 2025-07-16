@@ -97,7 +97,7 @@ if(TTMLIR_ENABLE_STABLEHLO)
   declare_mlir_dialect_python_bindings(
     ADD_TO_PARENT TTMLIRPythonSources.Dialects
     ROOT_DIR "${TTMLIR_PYTHON_ROOT_DIR}"
-    TD_FILE dialects/SdyEnumBinding.td
+    TD_FILE dialects/SdyBinding.td
     GEN_ENUM_BINDINGS ON
     GEN_ENUM_BINDINGS_TD_FILE dialects/SdyEnumBinding.td
     SOURCES dialects/sdy.py
