@@ -8,7 +8,7 @@ import inspect
 from dataclasses import dataclass
 from typing import List, Optional, Union, Tuple, Callable, Dict, Any
 from ttmlir.ir import *
-from ttmlir.dialects import ttir, ttcore, tensor, quant
+from ttmlir.dialects import ttir, ttcore, tensor, quant, stablehlo, sdy
 from ttmlir.passes import GoldenTensor, DataType
 import torch
 from enum import Enum, auto
@@ -4403,7 +4403,7 @@ class TTIRBuilderOps:
         kwargs = {"all_gather_dim": all_gather_dim, "cluster_axis": cluster_axis}
         return self.ccl_proxy(
             all_gather_golden,
-            ttir.AllGatherOp,
+            sdy.AllGatherOp,
             [input],
             kwargs=kwargs,
         )
