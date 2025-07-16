@@ -5257,10 +5257,10 @@ def TTIR_OptimizationBarrierOp : TTIR_Op<"optimization_barrier", [MemoryEffects<
     the values passed through it. It acts as a barrier for optimization passes.
 
     Inputs:
-    - `inputs` (Variadic): Any number of input values of any type.
+    - `input` (Variadic): A value of tensor type.
 
     Outputs:
-    - `results` (Variadic): The same number and types as the inputs, passed through unchanged.
+    - `result` (Variadic): Same value as input, passed through unchanged.
   }];
 
   let arguments = (ins AnyRankedTensor:$input);
