@@ -86,6 +86,25 @@ declare_mlir_python_sources(TTMLIRPythonSiteInitialize
   SOURCES _mlir_libs/_site_initialize_0.py
 )
 
+if(TTMLIR_ENABLE_STABLEHLO)
+  # The following options are used specifically for compiling nanobind codebase.
+  # They are copied over from SHLO's cmake file and will prevent nanobind warnings
+  # being treated as build errors and breaking the build.
+  add_compile_options(-Wno-error=cast-qual -Wno-error=nested-anon-types
+    -Wno-error=extra-semi -Wno-error=zero-length-array
+    -Wno-error=covered-switch-default)
+
+  declare_mlir_dialect_python_bindings(
+    ADD_TO_PARENT TTMLIRPythonSources.Dialects
+    ROOT_DIR "${TTMLIR_PYTHON_ROOT_DIR}"
+    TD_FILE dialects/SdyEnumBinding.td
+    GEN_ENUM_BINDINGS ON
+    GEN_ENUM_BINDINGS_TD_FILE dialects/SdyEnumBinding.td
+    SOURCES dialects/sdy.py
+    DIALECT_NAME sdy
+  )
+endif()
+
 ################################################################################
 # Extensions
 ################################################################################
