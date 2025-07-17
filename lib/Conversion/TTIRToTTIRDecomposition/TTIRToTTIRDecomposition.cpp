@@ -2124,7 +2124,7 @@ struct ReduceScatterReshapePattern
     // Create the reduce scatter operation on 4D tensors with adjusted
     // scatter_dim
     auto reduceScatter4D = ttir::utils::createDPSOp<ttir::ReduceScatterOp>(
-        rewriter, op.getLoc(), paddedOutputType, reshapeInput.getResult(),
+        rewriter, op.getLoc(), paddedOutputType, reshapeInput,
         adaptor.getReduceType(), adjustedScatterDim, adaptor.getClusterAxis());
 
     // Reshape back to original dimensionality
