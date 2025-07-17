@@ -42,6 +42,7 @@ target_link_libraries(TTMLIRRuntime
     TTRuntimeSysDesc
     TTRuntimeTTNN
     TTRuntimeTTMetal
+    TTRuntimeContext
     TTRuntimeDebug
     TTRuntimePerf
     TTRuntimeWorkarounds
@@ -60,7 +61,7 @@ target_link_libraries(TTMLIRRuntime PUBLIC coverage_config)
 set_target_properties(TTMLIRRuntime PROPERTIES INSTALL_RPATH "$ORIGIN")
 set_target_properties(TTMLIRRuntime PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
 
-add_dependencies(TTMLIRRuntime TTBinary TTRuntimeSysDesc TTRuntimeDebug TTRuntimePerf TTRuntimeWorkarounds TTRuntimeDylibs TTRuntimeTTNNTestLib TTRuntimeTTNN TTRuntimeTTMetal FBS_GENERATION)
+add_dependencies(TTMLIRRuntime TTBinary TTRuntimeSysDesc TTRuntimeContext TTRuntimeDebug TTRuntimePerf TTRuntimeWorkarounds TTRuntimeDylibs TTRuntimeTTNNTestLib TTRuntimeTTNN TTRuntimeTTMetal FBS_GENERATION)
 
 if (TTMLIR_ENABLE_RUNTIME)
   set(TTMLIR_RUNTIME_PUBLIC_HEADERS
