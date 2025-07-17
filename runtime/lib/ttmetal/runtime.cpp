@@ -356,11 +356,11 @@ getMemoryView(Device deviceHandle) {
 }
 
 void wait(Event event) {
-  std::shared_ptr<tt_metal::Event> eventPtr =
-      event.asSharedPtr<tt_metal::Event>(DeviceRuntime::TTMetal);
-  if (eventPtr) {
-    tt_metal::EventSynchronize(eventPtr);
-  }
+  //std::shared_ptr<tt_metal::Event> eventPtr =
+  //    event.asSharedPtr<tt_metal::Event>(DeviceRuntime::TTMetal);
+  //if (eventPtr) {
+  //  tt_metal::EventSynchronize(eventPtr);
+  //}
 }
 
 void wait(Tensor tensor, std::optional<uint8_t> cqId) {

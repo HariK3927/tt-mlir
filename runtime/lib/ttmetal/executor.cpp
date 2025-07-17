@@ -234,7 +234,7 @@ void CQExecutor::execute(const target::metal::HostAllocCommand *command) {
 
 void CQExecutor::execute(const target::metal::ReturnCommand *command) {
   std::shared_ptr<tt_metal::Event> event = std::make_shared<tt_metal::Event>();
-  tt_metal::EnqueueRecordEvent(*cq, event);
+  //tt_metal::EnqueueRecordEvent(*cq, event);
 
   LOG_ASSERT(outputs.empty(),
              "Unexpected outputs, multiple returns not supported");
@@ -372,8 +372,8 @@ void CQExecutor::execute(
 void CQExecutor::execute(
     const target::metal::EventSynchronizeCommand *command) {
   ZoneScopedN("EventSynchronizeCommand");
-  auto event = events.at(command->ref()->global_id());
-  tt_metal::EventSynchronize(event);
+  //auto event = events.at(command->ref()->global_id());
+  //tt_metal::EventSynchronize(event);
 }
 
 void CQExecutor::execute(const target::metal::EventQueryCommand *command) {
