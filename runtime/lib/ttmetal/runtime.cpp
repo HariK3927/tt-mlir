@@ -5,6 +5,7 @@
 #include <variant>
 
 #include "tracy/Tracy.hpp"
+#include "tt-metalium/fabric.hpp"
 #include "tt/runtime/detail/common.h"
 #include "tt/runtime/detail/dylib.h"
 #include "tt/runtime/detail/logger.h"
@@ -156,10 +157,10 @@ Device openMeshDevice(const std::vector<uint32_t> &meshShape,
                                                      options.deviceIds);
   bool isFabricEnabled = false;
   if (options.fabricConfig.has_value()) {
-    tt::tt_metal::FabricConfig fabricConfig =
+    tt::tt_fabric::FabricConfig fabricConfig =
         common::getFabricConfig(options.fabricConfig.value());
-    tt::tt_metal::detail::SetFabricConfig(fabricConfig);
-    isFabricEnabled = (fabricConfig != tt::tt_metal::FabricConfig::DISABLED);
+    tt::tt_fabric::SetFabricConfig(fabricConfig);
+    isFabricEnabled = (fabricConfig != tt::tt_fabric::FabricConfig::DISABLED);
   }
 
   std::shared_ptr<tt_metal::distributed::MeshDevice> meshDevice =
@@ -193,7 +194,7 @@ void closeMeshDevice(Device parentMesh) {
 #endif
 
   metalMeshDevice.close();
-  tt::tt_metal::detail::SetFabricConfig(tt::tt_metal::FabricConfig::DISABLED);
+  tt::tt_fabric::SetFabricConfig(tt::tt_fabric::FabricConfig::DISABLED);
 }
 
 Device createSubMeshDevice(

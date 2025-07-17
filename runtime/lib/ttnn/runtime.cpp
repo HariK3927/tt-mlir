@@ -4,6 +4,7 @@
 
 #include "Constants.h"
 
+#include "tt-metalium/fabric.hpp"
 #include "tt/runtime/debug.h"
 #include "tt/runtime/detail/common.h"
 #include "tt/runtime/detail/dylib.h"
@@ -483,10 +484,10 @@ Device openMeshDevice(const std::vector<uint32_t> &meshShape,
 
   bool isFabricEnabled = false;
   if (options.fabricConfig.has_value()) {
-    tt::tt_metal::FabricConfig fabricConfig =
+    tt::tt_fabric::FabricConfig fabricConfig =
         common::getFabricConfig(options.fabricConfig.value());
-    tt::tt_metal::detail::SetFabricConfig(fabricConfig);
-    isFabricEnabled = (fabricConfig != tt::tt_metal::FabricConfig::DISABLED);
+    tt::tt_fabric::SetFabricConfig(fabricConfig);
+    isFabricEnabled = (fabricConfig != tt::tt_fabric::FabricConfig::DISABLED);
     if (isFabricEnabled) {
       LOG_DEBUG("Fabric is enabled");
     }
@@ -533,7 +534,7 @@ void closeMeshDevice(Device parentMesh) {
   ::tt::tt_metal::DumpMeshDeviceProfileResults(ttnnMeshDevice);
 #endif
   ttnnMeshDevice.close();
-  tt::tt_metal::detail::SetFabricConfig(tt::tt_metal::FabricConfig::DISABLED);
+  tt::tt_fabric::SetFabricConfig(tt::tt_fabric::FabricConfig::DISABLED);
 }
 
 Device createSubMeshDevice(
