@@ -97,13 +97,6 @@ struct TTIRToTTIRDecompositionPass
               meanType.getRank() == 4 && varType.getRank() == 4);
     });
 
-    target.addDynamicallyLegalOp<ttir::ReduceScatterOp>(
-        [&](ttir::ReduceScatterOp op) {
-          auto inputType =
-              mlir::cast<RankedTensorType>(op.getInput().getType());
-          return inputType.getRank() == 4;
-        });
-
     target.addDynamicallyLegalOp<ttir::ProdOp>([&](ttir::ProdOp op) {
       auto dimArg = op.getDimArg();
       if (!dimArg) {
