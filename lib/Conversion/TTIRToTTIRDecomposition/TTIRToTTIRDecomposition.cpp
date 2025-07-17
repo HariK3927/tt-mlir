@@ -2069,6 +2069,78 @@ public:
 };
 } // namespace
 
+//===----------------------------------------------------------------------===//
+// ReduceScatterOp decomposition
+//===----------------------------------------------------------------------===//
+
+namespace {
+struct ReduceScatterReshapePattern
+    : public OpConversionPattern<ttir::ReduceScatterOp> {
+  using OpConversionPattern<ttir::ReduceScatterOp>::OpConversionPattern;
+
+  LogicalResult
+  matchAndRewrite(ttir::ReduceScatterOp op, OpAdaptor adaptor,
+                  ConversionPatternRewriter &rewriter) const override {
+    auto inputType = mlir::cast<RankedTensorType>(adaptor.getInput().getType());
+    auto outputType = mlir::cast<RankedTensorType>(op.getResult().getType());
+    int64_t rank = inputType.getRank();
+
+    if (rank >= 4) {
+      return failure();
+    }
+
+    SmallVector<int64_t> originalShape(inputType.getShape());
+    SmallVector<int64_t> outputShape(outputType.getShape());
+    int32_t originalScatterDim = adaptor.getScatterDim();
+
+    SmallVector<int64_t> paddedShape;
+    int64_t paddingDims = 4 - rank;
+    for (int64_t i = 0; i < paddingDims; ++i) {
+      paddedShape.push_back(1);
+    }
+    paddedShape.append(originalShape.begin(), originalShape.end());
+
+    SmallVector<int64_t> paddedOutputShape;
+    for (int64_t i = 0; i < paddingDims; ++i) {
+      paddedOutputShape.push_back(1);
+    }
+    paddedOutputShape.append(outputShape.begin(), outputShape.end());
+
+    int32_t adjustedScatterDim = originalScatterDim + paddingDims;
+
+    // Create reshape to 4D
+    SmallVector<int32_t> paddedShapeI32(paddedShape.begin(), paddedShape.end());
+    auto reshapeInput = ttir::utils::createDPSOp<ttir::ReshapeOp>(
+        rewriter,
+        ttmlir::utils::appendLocationSuffix(op.getLoc(), "_reshape_to_4d"),
+        paddedShape, inputType.getElementType(), inputType.getEncoding(),
+        adaptor.getInput(), rewriter.getI32ArrayAttr(paddedShapeI32));
+
+    // Create 4D output tensor type
+    RankedTensorType paddedOutputType =
+        RankedTensorType::get(paddedOutputShape, outputType.getElementType(),
+                              outputType.getEncoding());
+
+    // Create the reduce scatter operation on 4D tensors with adjusted
+    // scatter_dim
+    auto reduceScatter4D = ttir::utils::createDPSOp<ttir::ReduceScatterOp>(
+        rewriter, op.getLoc(), paddedOutputType, reshapeInput.getResult(),
+        adaptor.getReduceType(), adjustedScatterDim, adaptor.getClusterAxis());
+
+    // Reshape back to original dimensionality
+    SmallVector<int32_t> outputShapeI32(outputShape.begin(), outputShape.end());
+    auto reshapeOutput = ttir::utils::createDPSOp<ttir::ReshapeOp>(
+        rewriter,
+        ttmlir::utils::appendLocationSuffix(op.getLoc(), "_reshape_back"),
+        outputShape, outputType.getElementType(), outputType.getEncoding(),
+        reduceScatter4D.getResult(), rewriter.getI32ArrayAttr(outputShapeI32));
+
+    rewriter.replaceOp(op, reshapeOutput.getResult());
+    return success();
+  }
+};
+} // namespace
+
 void populateTTIRToTTIRDecompositionPatterns(MLIRContext *ctx,
                                              RewritePatternSet &patterns,
                                              TypeConverter &typeConverter) {
@@ -2088,6 +2160,7 @@ void populateTTIRToTTIRDecompositionPatterns(MLIRContext *ctx,
   patterns.add<DequantizeOpPattern>(typeConverter, ctx);
   patterns.add<RequantizeOpPattern>(typeConverter, ctx);
   patterns.add<ReductionProdPattern>(typeConverter, ctx);
+  patterns.add<ReduceScatterReshapePattern>(typeConverter, ctx);
 }
 
 } // namespace mlir::tt
