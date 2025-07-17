@@ -1779,6 +1779,7 @@ hoisted_unary_ops = [
     create_hoisted_unary_op(sigmoid, "sigmoid"),
     create_hoisted_unary_op(sin, "sin"),
     create_hoisted_unary_op(cos, "cos"),
+    create_hoisted_unary_op(relu, "relu"),
     pytest.param(
         create_hoisted_unary_op(max, "max"),
         marks=pytest.mark.skip(
