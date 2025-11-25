@@ -213,6 +213,46 @@ def test_tan(shape: Shape, dtype: torch.dtype, target: str, request, device):
     )
 
 
+def reduce_window(
+    in0: Operand,
+    builder: StableHLOBuilder,
+    unit_attrs: Optional[List[str]] = None,
+):
+    builder.set_graph_level_check(True)
+    return builder.reduce_window(
+        in0,
+        computation="add",
+        window_dimensions=[1, 2, 2, 1],
+        window_strides=[1, 1, 1, 1],
+        padding=[[0, 0], [0, 0], [0, 0], [0, 0]],
+        unit_attrs=unit_attrs,
+    )
+
+
+@pytest.mark.parametrize("shape", [(1, 32, 32, 3)], ids=shape_str)
+@pytest.mark.parametrize("dtype", [torch.float32], ids=["f32"])
+@pytest.mark.parametrize("target", ["ttnn"])
+@pytest.mark.parametrize(
+    "test_fn",
+    [
+        reduce_window,
+    ],
+)
+def test_reduce_window_ops(
+    test_fn: Callable, shape: Shape, dtype: torch.dtype, target: str, request, device
+):
+    compile_and_execute_shlo(
+        test_fn,
+        [shape],
+        [dtype],
+        test_base=request.node.name,
+        output_root=request.config.getoption("--path"),
+        system_desc_path=request.config.getoption("--sys-desc"),
+        target=target,
+        device=device,
+    )
+
+
 @pytest.mark.parametrize("shapes", [[(64, 64), (64, 64), (64, 64)]], ids=["64x64"])
 @pytest.mark.parametrize("dtypes", [[torch.float32] * 3], ids=["f32"])
 @pytest.mark.parametrize("target", ["ttnn"])

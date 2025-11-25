@@ -644,6 +644,82 @@ class StableHLOBuilder(Builder):
             unit_attrs=unit_attrs,
         )
 
+    def reduce_window(
+        self,
+        in0: Operand,
+        init_value: Operand,
+        computation: str,
+        window_dimensions: List[int],
+        window_strides: List[int],
+        padding: List[Tuple[int, int]],
+        unit_attrs: Optional[List[str]] = None,
+        sharding_attr: Optional[sdy.TensorShardingPerValueAttr] = None,
+    ) -> OpView:
+        """
+        Creates ``stablehlo.reduce_window``.
+
+        *Reduce window operation.*
+
+        Applies a reduction computation to windows of the input tensor.
+        For each window position, applies the specified computation to the elements
+        within that window and the initial value.
+
+        Mathematical definition: Reduces input elements in each window using the
+        specified computation (add, max, min) and the initial value.
+
+        Parameters
+        ----------
+        in0 : Operand
+            Input tensor to reduce
+        init_value : Operand
+            Initial value for the reduction
+        computation : str
+            Reduction computation type ("add", "max", "min")
+        window_dimensions : List[int]
+            Size of the reduction window for each dimension
+        window_strides : List[int]
+            Stride of the window for each dimension
+        padding : List[Tuple[int, int]]
+            Padding specifications as (before, after) for each dimension
+        unit_attrs : Optional[List[str]]
+            Optional list of unit attributes
+        sharding_attr : Optional[sdy.TensorShardingPerValueAttr]
+            Optional sharding attribute
+
+        Returns
+        -------
+        OpView
+            A tensor with the reduced window results
+        """
+        organize_golden_args = lambda inputs: (
+            self._get_golden_tensor(inputs[0]),
+            self._get_golden_tensor(inputs[1]),
+        )
+        golden_kwargs = {
+            "computation": computation,
+            "window_dimensions": window_dimensions,
+            "window_strides": window_strides,
+            "padding": padding,
+        }
+
+        return self._op_proxy(
+            stablehlo.ReduceWindowOp,
+            [in0, init_value],
+            unit_attrs=unit_attrs,
+            sharding_attr=sharding_attr,
+            organize_golden_args=organize_golden_args,
+            golden_kwargs=golden_kwargs,
+            stablehlo_kwargs={
+                "window_dimensions": DenseI64ArrayAttr.get(window_dimensions),
+                "window_strides": DenseI64ArrayAttr.get(window_strides),
+                "padding": [
+                    stablehlo.PaddingConfigDimensionAttr.get(pad_before, pad_after)
+                    for pad_before, pad_after in padding
+                ],
+            },
+            skip_golden=False,
+        )
+
     # ----- Public Shardy Attribute Generators ----
 
     def mesh_axis_attr(

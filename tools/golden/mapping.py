@@ -629,6 +629,84 @@ def avg_pool2d_golden(input_tensor: GoldenMapTensor, **kwargs) -> GoldenMapTenso
     return result
 
 
+def reduce_window_golden(
+    input_tensor: GoldenMapTensor, init_value=None, **kwargs
+) -> GoldenMapTensor:
+    """
+    Golden function for StableHLO ReduceWindowOp.
+
+    Supports 'add' (sum) and 'max' reductions for 2D spatial windows.
+    Assumes channels-last layout (consistent with other pool helpers).
+
+    Parameters
+    ----------
+    input_tensor : GoldenMapTensor
+        Input tensor to reduce
+    init_value : GoldenMapTensor, optional
+        Initial value for the reduction (default: None)
+    **kwargs : dict
+        Keyword arguments including:
+        - computation: str - Reduction type ("add", "max", "min")
+        - window_dimensions: List[int] - Window size per dimension
+        - window_strides: List[int] - Stride per dimension
+        - padding: List[Tuple[int, int]] - (before, after) padding per dimension
+
+    Returns
+    -------
+    GoldenMapTensor
+        Reduced window output tensor
+    """
+    comp = str(kwargs.get("computation", "add")).lower()
+    window = unpack_mlir_attr(kwargs.get("window_dimensions", [1]))
+    stride = unpack_mlir_attr(kwargs.get("window_strides", window))
+    padding = unpack_mlir_attr(kwargs.get("padding", [(0, 0)] * len(window)))
+
+    if len(window) < 2:
+        raise NotImplementedError(
+            "reduce_window_golden: only supports 2D windows (use last two dims)"
+        )
+
+    kernel = tuple(window[-2:])
+    stride_t = tuple(stride[-2:])
+    pad_h_before, pad_h_after = padding[-2]
+    pad_w_before, pad_w_after = padding[-1]
+
+    symmetric = (pad_h_before == pad_h_after) and (pad_w_before == pad_w_after)
+    if symmetric:
+        pool_padding = (pad_h_before, pad_w_before)
+        use_manual_pad = False
+    else:
+        pad_list = [pad_w_before, pad_w_after, pad_h_before, pad_h_after]
+        use_manual_pad = True
+        pool_padding = 0
+
+    inp = input_tensor.transpose(-2, -1).transpose(-3, -2)
+
+    if use_manual_pad:
+        pad_value = float("-inf") if comp == "max" else 0.0
+        inp = torch.nn.functional.pad(inp, pad_list, mode="constant", value=pad_value)
+
+    if comp == "add":
+        out = torch.nn.functional.avg_pool2d(
+            inp,
+            kernel_size=kernel,
+            stride=stride_t,
+            padding=pool_padding,
+            count_include_pad=False,
+        )
+        area = kernel[0] * kernel[1]
+        out = out * area
+    elif comp == "max":
+        out = torch.nn.functional.max_pool2d(
+            inp, kernel_size=kernel, stride=stride_t, padding=pool_padding
+        )
+    else:
+        raise ValueError(f"Unsupported reduce_window computation: {comp}")
+
+    out = out.transpose(-3, -2).transpose(-2, -1)
+    return out
+
+
 def batch_norm_golden(
     input_tensor: GoldenMapTensor,
     scale: GoldenMapTensor,
@@ -2987,6 +3065,7 @@ GOLDEN_MAPPINGS: Dict[type, Callable] = {
     stablehlo.SineOp: torch.sin,
     stablehlo.SqrtOp: torch.sqrt,
     stablehlo.TanOp: torch.tan,
+    stablehlo.ReduceWindowOp: reduce_window_golden,
     # ----- TTNN OPS -----
     # Elementwise unary operations
     ttnn.AbsOp: torch.abs,
